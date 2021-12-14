@@ -221,15 +221,13 @@ async function generateSiQADResult({
       },
     })
   );
-  fs.mkdirSync(`./simulation-results/${name}/${layoutId}`, { recursive: true });
+  const zipPath = `./simulation-results/${name}/${layoutId}`;
+  fs.mkdirSync(zipPath, { recursive: true });
   await new Promise((resolve, reject) => {
-    zip.writeZip(
-      `./simulation-results/${name}/${layoutId}/${input}.sqjx.zip`,
-      (error) => {
-        if (error) reject(error);
-        else resolve();
-      }
-    );
+    zip.writeZip(`${zipPath}/${input}.sqjx.zip`, (error) => {
+      if (error) reject(error);
+      else resolve();
+    });
   });
 
   return path.resolve(`./simulation-results/${name}.sqjx.zip`);
