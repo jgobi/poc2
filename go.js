@@ -12,8 +12,9 @@ export async function main(path, fast = true) {
   file.save([1, 1], "teste.sqd");
   let results = await run(file, cruzador, {
     failFast: fast,
-    simParams: { mu: "-0.32" },
+    simParams: { mu: "-0.32", num_instances: "40" },
     shouldGenerateSiQADResult: true,
+    retainSimulationFiles: false,
   });
   console.log(JSON.stringify(results, null, 2));
 }

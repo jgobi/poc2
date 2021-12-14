@@ -6,7 +6,12 @@
 export async function run(
   siqadFile,
   truthTable,
-  { simParams, shouldGenerateSiQADResult = false, failFast = true } = {}
+  {
+    simParams,
+    shouldGenerateSiQADResult = false,
+    retainSimulationFiles = true,
+    failFast = true,
+  } = {}
 ) {
   const table = truthTable();
   table.forEach((entry) => {
@@ -20,7 +25,7 @@ export async function run(
     const { simulationResult } = await siqadFile.runSimulation(
       entry.input,
       simParams,
-      shouldGenerateSiQADResult
+      { shouldGenerateSiQADResult, retainSimulationFiles }
     );
     entry.result = simulationResult.output.map((e) => +e);
 

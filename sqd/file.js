@@ -10,7 +10,7 @@ const execFile = promisify(execFileCallback);
 
 import AdmZip from "adm-zip";
 
-function generateSimulationParams({ mu = "-0.28" } = {}) {
+function generateSimulationParams(config = {}) {
   return {
     T_e_inv_point: "0.09995",
     T_init: "500",
@@ -20,7 +20,7 @@ function generateSimulationParams({ mu = "-0.28" } = {}) {
     debye_length: "5",
     eps_r: "5.6",
     hop_attempt_factor: "5",
-    muzm: "" + mu,
+    muzm: config.muzm || config.mu || "-0.28",
     num_instances: "-1",
     phys_validity_check_cycles: "10",
     reset_T_during_v_freeze_reset: "false",
@@ -30,6 +30,7 @@ function generateSimulationParams({ mu = "-0.28" } = {}) {
     v_freeze_init: "-1",
     v_freeze_reset: "-1",
     v_freeze_threshold: "4",
+    ...config,
   };
 }
 
@@ -119,13 +120,14 @@ export class SiQADFile {
   async runSimulation(
     input,
     params = { mu: "-0.32" },
-    shouldGenerateSiQADResult = false
+    { shouldGenerateSiQADResult = false, retainSimulationFiles = true } = {}
   ) {
     fs.mkdirSync("./simulation-files", { recursive: true });
     fs.mkdirSync("./simulation-results", { recursive: true });
-    const fileName = `${path.basename(this.path, ".sqd")}--${
-      this.layout.id
-    }--${input.map((v) => +v).join("")}`;
+
+    const scriptName = path.basename(this.path, ".sqd");
+    const inputValue = input.map((v) => +v).join("");
+    const fileName = `${scriptName}--${this.layout.id}--${inputValue}`;
     const inputFile = path.resolve(`./simulation-files/${fileName}.sqd`);
     const outputFile = path.resolve(`./simulation-results/${fileName}.xml`);
 
@@ -151,16 +153,24 @@ export class SiQADFile {
     let siqadFile = null;
     if (shouldGenerateSiQADResult) {
       try {
-        await generateSiQADResult(
-          fileName,
-          inputFile,
-          outputFile,
+        await generateSiQADResult({
+          name: scriptName,
+          input: inputValue,
+          layoutId: this.layout.id,
+          problem: inputFile,
+          result: outputFile,
           stdout,
-          stderr
-        );
+          stderr,
+        });
       } catch (err) {
         console.error("Failed to create siqad output file, ignored.");
+        console.error(err);
       }
+    }
+
+    if (!retainSimulationFiles) {
+      await fs.rmSync(inputFile);
+      await fs.rmSync(outputFile);
     }
 
     return {
@@ -173,26 +183,22 @@ export class SiQADFile {
   }
 }
 
-async function generateSiQADResult(name, problem, result, stdout, stderr) {
-  fs.mkdirSync(`./simulation-results/${name}/step_0`, { recursive: true });
-  fs.copyFileSync(
-    problem,
-    `./simulation-results/${name}/step_0/sim_problem_0.xml`
-  );
-  fs.copyFileSync(
-    result,
-    `./simulation-results/${name}/step_0/sim_result_0.xml`
-  );
-  fs.writeFileSync(
-    `./simulation-results/${name}/step_0/runtime_stdout.log`,
-    stdout
-  );
-  fs.writeFileSync(
-    `./simulation-results/${name}/step_0/runtime_stderr.log`,
-    stderr
-  );
-  fs.writeFileSync(
-    `./simulation-results/${name}/manifest.xml`,
+async function generateSiQADResult({
+  name,
+  input,
+  layoutId,
+  problem,
+  result,
+  stdout,
+  stderr,
+}) {
+  const zip = new AdmZip();
+  zip.addLocalFile(problem, `${name}/step_0`, "sim_problem_0.xml");
+  zip.addLocalFile(result, `${name}/step_0`, "sim_result_0.xml");
+  zip.addFile(`${name}/step_0/runtime_stdout.log`, stdout);
+  zip.addFile(`${name}/step_0/runtime_stderr.log`, stderr);
+  zip.addFile(
+    `${name}/manifest.xml`,
     stringifyXML({
       simjob: {
         name: `${name}`,
@@ -215,17 +221,16 @@ async function generateSiQADResult(name, problem, result, stdout, stderr) {
       },
     })
   );
-
-  const zip = new AdmZip();
-  zip.addLocalFolder(`./simulation-results/${name}`, `${name}`);
+  fs.mkdirSync(`./simulation-results/${name}/${layoutId}`, { recursive: true });
   await new Promise((resolve, reject) => {
-    zip.writeZip(`./simulation-results/${name}.sqjx.zip`, (error) => {
-      if (error) reject(error);
-      else resolve();
-    });
+    zip.writeZip(
+      `./simulation-results/${name}/${layoutId}/${input}.sqjx.zip`,
+      (error) => {
+        if (error) reject(error);
+        else resolve();
+      }
+    );
   });
-
-  fs.rmSync(`./simulation-results/${name}`, { recursive: true });
 
   return path.resolve(`./simulation-results/${name}.sqjx.zip`);
 }
