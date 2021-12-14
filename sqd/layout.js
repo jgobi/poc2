@@ -79,6 +79,8 @@ export class DBLayout {
     const parsed = parseDBs(dbs);
 
     this.area = {
+      width: parsed.area[3].n - parsed.area[0].n + 1,
+      height: parsed.area[3].m - parsed.area[0].m + 1,
       m: { min: parsed.area[0].m, max: parsed.area[3].m },
       n: { min: parsed.area[0].n, max: parsed.area[3].n },
     };

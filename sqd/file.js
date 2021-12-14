@@ -10,6 +10,11 @@ const execFile = promisify(execFileCallback);
 
 import AdmZip from "adm-zip";
 
+/**
+ *
+ * @param {import('../types').SimulationParameters} config
+ * @returns
+ */
 function generateSimulationParams(config = {}) {
   return {
     T_e_inv_point: "0.09995",
@@ -20,7 +25,6 @@ function generateSimulationParams(config = {}) {
     debye_length: "5",
     eps_r: "5.6",
     hop_attempt_factor: "5",
-    muzm: config.muzm || config.mu || "-0.28",
     num_instances: "-1",
     phys_validity_check_cycles: "10",
     reset_T_during_v_freeze_reset: "false",
@@ -31,6 +35,7 @@ function generateSimulationParams(config = {}) {
     v_freeze_reset: "-1",
     v_freeze_threshold: "4",
     ...config,
+    muzm: config.muzm || config.mu || "-0.32",
   };
 }
 
@@ -66,7 +71,7 @@ export class SiQADFile {
   /**
    *
    * @param {boolean[]} input
-   * @param {object} [simParams]
+   * @param {import('../types').SimulationParameters} [simParams]
    * @returns
    */
   stringify(input, simParams) {
@@ -106,7 +111,7 @@ export class SiQADFile {
    *
    * @param {boolean[]} input
    * @param {string} path
-   * @param {object} [simParams]
+   * @param {import('../types').SimulationParameters} [simParams]
    */
   save(input, path, simParams) {
     fs.writeFileSync(path, this.stringify(input, simParams));
@@ -114,13 +119,13 @@ export class SiQADFile {
 
   /**
    *
-   * @param {object} params
+   * @param {import('../types').SimulationParameters} simParams
    * @param {boolean[]} input
    */
   async runSimulation(
     input,
-    params = { mu: "-0.32" },
-    { shouldGenerateSiQADResult = false, retainSimulationFiles = true } = {}
+    simParams = { mu: "-0.32" },
+    { generateSiQADResult = false, retainSimulationFiles = true } = {}
   ) {
     fs.mkdirSync("./simulation-files", { recursive: true });
     fs.mkdirSync("./simulation-results", { recursive: true });
@@ -131,7 +136,7 @@ export class SiQADFile {
     const inputFile = path.resolve(`./simulation-files/${fileName}.sqd`);
     const outputFile = path.resolve(`./simulation-results/${fileName}.xml`);
 
-    this.save(input, inputFile, params);
+    this.save(input, inputFile, simParams);
 
     const { stdout, stderr } = await execFile(
       `${__dirname}/simanneal/simanneal`,
@@ -139,22 +144,23 @@ export class SiQADFile {
     );
     const file = fs.readFileSync(outputFile, "utf8");
     const results = parseXML(file).sim_out.elec_dist.dist;
-
     const r = results
       .filter((e) => +e.$physically_valid === 1)
       .sort((a, b) => +a.$energy - +b.$energy)
       .shift();
-    const simulationResult = {
-      energy: +r.$energy,
-      result: r["#text"],
-      output: this.layout.getOutputFromSimulationResult(r["#text"]),
-    };
+    const simulationResult = !r
+      ? null
+      : {
+          energy: +r.$energy,
+          result: r["#text"],
+          output: this.layout.getOutputFromSimulationResult(r["#text"]),
+        };
 
     let siqadFile = null;
-    if (shouldGenerateSiQADResult) {
+    if (generateSiQADResult) {
       try {
-        await generateSiQADResult({
-          name: scriptName,
+        await generateSiQADResultFile({
+          scriptName,
           input: inputValue,
           layoutId: this.layout.id,
           problem: inputFile,
@@ -183,8 +189,8 @@ export class SiQADFile {
   }
 }
 
-async function generateSiQADResult({
-  name,
+async function generateSiQADResultFile({
+  scriptName,
   input,
   layoutId,
   problem,
@@ -192,6 +198,7 @@ async function generateSiQADResult({
   stdout,
   stderr,
 }) {
+  const name = `${scriptName}_${layoutId}`;
   const zip = new AdmZip();
   zip.addLocalFile(problem, `${name}/step_0`, "sim_problem_0.xml");
   zip.addLocalFile(result, `${name}/step_0`, "sim_result_0.xml");
@@ -221,7 +228,7 @@ async function generateSiQADResult({
       },
     })
   );
-  const zipPath = `./simulation-results/${name}/${layoutId}`;
+  const zipPath = `./simulation-results/${scriptName}/${layoutId}`;
   fs.mkdirSync(zipPath, { recursive: true });
   await new Promise((resolve, reject) => {
     zip.writeZip(`${zipPath}/${input}.sqjx.zip`, (error) => {
@@ -230,5 +237,6 @@ async function generateSiQADResult({
     });
   });
 
-  return path.resolve(`./simulation-results/${name}.sqjx.zip`);
+  fs.copyFileSync(problem, `${zipPath}/${input}.sqd`);
+  return path.resolve(`${zipPath}/${input}.sqjx.zip`);
 }
