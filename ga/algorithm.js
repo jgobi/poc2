@@ -1,5 +1,7 @@
-const RANDOM_SEED = 'nanocomp';
-const alea = require('../alea');
+import alea from "../alea.cjs";
+import { Individual } from "./individual.js";
+
+const RANDOM_SEED = "nanocomp";
 const random = new alea(RANDOM_SEED); // prng
 
 export class GeneticAlgorithm {
