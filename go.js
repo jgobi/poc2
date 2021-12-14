@@ -9,7 +9,6 @@ export async function main(path, fast = true) {
   file.open(path);
 
   file.layout.setInner(createInnerDBs(targetCruzador));
-  file.save([1, 1], "teste.sqd");
   let results = await run(file, cruzador, {
     failFast: fast,
     simParams: { mu: "-0.32", num_instances: "40" },
