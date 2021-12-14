@@ -1,11 +1,9 @@
-import alea from "../alea.cjs";
+import { random } from "../random.js";
 import { Individual } from "./individual.js";
-
-const RANDOM_SEED = "nanocomp";
-const random = new alea(RANDOM_SEED); // prng
 
 export class GeneticAlgorithm {
   constructor(populationSize, mutationRate, crossoverRate, elitismCount) {
+    /** @type {Individual[]} */
     this.population = [];
     this.populationSize = populationSize;
 
@@ -23,15 +21,40 @@ export class GeneticAlgorithm {
     }
   }
 
-  calculatePopulationFitness() {
+  /**
+   * @param {import('../sqd/file').SiQADFile} file
+   * @param {import('../types').TruthTable} truthTable
+   */
+  async calculatePopulationFitness(file, truthTable) {
     if (!this.dirty) return;
-    this.population.sort((a, b) => b.getFitness() - a.getFitness());
+    for (const ind of this.population) {
+      await ind.getFitness(file, truthTable);
+    }
+    this.population.sort(
+      (a, b) => b.fitness - a.fitness || a.dbCount - b.dbCount
+    );
     this.dirty = false;
   }
 
-  getBestIndividual() {
-    this.calculatePopulationFitness();
+  /**
+   *
+   * @param {import('../sqd/file').SiQADFile} file
+   * @param {import('../types').TruthTable} truthTable
+   * @returns {Promise<Individual>}
+   */
+  async getBestIndividual(file, truthTable) {
+    await this.calculatePopulationFitness(file, truthTable);
     return this.population[0];
+  }
+
+  selectParent() {
+    let max = this.population.reduce((acc, ind) => acc + ind.fitness, 0);
+    let r = random.double() * max;
+    let total = 0;
+    for (const ind of this.population) {
+      total += ind.fitness;
+      if (r < total) return ind;
+    }
   }
 
   nextGeneration() {
@@ -55,6 +78,6 @@ export class GeneticAlgorithm {
       }
     }
 
-    this.population = newPopulation.push(...elitismPopulation);
+    this.population = newPopulation;
   }
 }
