@@ -7,13 +7,15 @@ export class Individual {
    *
    * @param {number} width
    * @param {number} height
+   * @param {import('../types').SimulationParameters} [simParams]
    * @param {number[]} [geneticCode]
    */
-  constructor(width, height, geneticCode) {
+  constructor(width, height, simParams = {}, geneticCode) {
     this.dirty = true;
     this.fitness = 0;
     this.width = width;
     this.height = height;
+    this.simParams = simParams;
     this.geneticCode =
       geneticCode ??
       Array(width * height)
@@ -70,7 +72,7 @@ export class Individual {
     file.layout.setInner(createInnerDBs(phenotype));
     this.id = file.layout.id;
     const results = await run(file, truthTable, {
-      simParams: { mu: "-0.32", num_instances: "-1" },
+      simParams: { mu: "-0.32", num_instances: "-1", ...this.simParams },
       failFast: false,
       retainSimulationFiles: false,
       generateSiQADResult: true,
@@ -85,7 +87,7 @@ export class Individual {
     const genetic = [...this.geneticCode];
     const idx = Math.floor(random.double() * genetic.length);
     genetic[idx] = (genetic[idx] + (random.double() < 0.5) + 1) % 3;
-    return new Individual(this.width, this.height, genetic);
+    return new Individual(this.width, this.height, this.simParams, genetic);
   }
 
   /**
@@ -93,9 +95,20 @@ export class Individual {
    */
   crossover(other) {
     const genetic = [];
-    const idx = Math.floor(random.double() * this.geneticCode.length);
-    genetic.push(...this.geneticCode.slice(0, idx));
-    genetic.push(...other.geneticCode.slice(idx));
-    return new Individual(this.width, this.height, genetic);
+
+    if (random.double() < 0.4) {
+      // one point crossover
+      const idx = Math.floor(random.double() * this.geneticCode.length);
+      genetic.push(...this.geneticCode.slice(0, idx));
+      genetic.push(...other.geneticCode.slice(idx));
+    } else {
+      // uniform crossover
+      const gens = [this.geneticCode, other.geneticCode];
+      const geneticLength = this.geneticCode.length;
+      for (let i = 0; i < geneticLength; i++) {
+        genetic.push(gens[+(random.double() < 0.5)][i]);
+      }
+    }
+    return new Individual(this.width, this.height, this.simParams, genetic);
   }
 }

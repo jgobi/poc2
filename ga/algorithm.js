@@ -15,9 +15,15 @@ export class GeneticAlgorithm {
     this.generationCount = 0;
   }
 
-  generatePopulation(width, height) {
+  /**
+   *
+   * @param {number} width
+   * @param {number} height
+   * @param {import('../types').SimulationParameters} [simParams]
+   */
+  generatePopulation(width, height, simParams = {}) {
     for (let i = 0; i < this.populationSize; i++) {
-      this.population.push(new Individual(width, height));
+      this.population.push(new Individual(width, height, simParams));
     }
   }
 
