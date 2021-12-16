@@ -29,14 +29,14 @@
 
     function Alea(seed) {
       var me = this, mash = Mash();
-    
+
       me.next = function() {
         var t = 2091639 * me.s0 + me.c * 2.3283064365386963e-10; // 2^-32
         me.s0 = me.s1;
         me.s1 = me.s2;
         return me.s2 = t - (me.c = t | 0);
       };
-    
+
       // Apply the seeding algorithm from Baagoe.
       me.c = 1;
       me.s0 = mash(' ');
@@ -50,7 +50,7 @@
       if (me.s2 < 0) { me.s2 += 1; }
       mash = null;
     }
-    
+
     function copy(f, t) {
       t.c = f.c;
       t.s0 = f.s0;
@@ -58,13 +58,15 @@
       t.s2 = f.s2;
       return t;
     }
-    
+
     function impl(seed, opts) {
       var xg = new Alea(seed),
           state = opts && opts.state,
           prng = xg.next;
+      prng.count = 0;
       prng.int32 = function() { return (xg.next() * 0x100000000) | 0; }
       prng.double = function() {
+        prng.count++;
         return prng() + (prng() * 0x200000 | 0) * 1.1102230246251565e-16; // 2^-53
       };
       prng.quick = prng;
@@ -74,10 +76,10 @@
       }
       return prng;
     }
-    
+
     function Mash() {
       var n = 0xefc8249d;
-    
+
       var mash = function(data) {
         data = String(data);
         for (var i = 0; i < data.length; i++) {
@@ -92,11 +94,11 @@
         }
         return (n >>> 0) * 2.3283064365386963e-10; // 2^-32
       };
-    
+
       return mash;
     }
-    
-    
+
+
     if (module && module.exports) {
       module.exports = impl;
     } else if (define && define.amd) {
@@ -104,11 +106,9 @@
     } else {
       this.alea = impl;
     }
-    
+
     })(
       this,
       (typeof module) == 'object' && module,    // present in node.js
       (typeof define) == 'function' && define   // present with an AMD loader
     );
-    
-    
