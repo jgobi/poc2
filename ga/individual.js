@@ -45,6 +45,19 @@ export class Individual {
       .filter((v) => v);
   }
 
+  toString(showHelp = false) {
+    return (
+      (showHelp ? "○: empty, ◓: db up, ◒: db down\n" : "") +
+      this.geneticCode
+        .map(
+          (v, i) =>
+            (!i || i % this.width ? "" : "\n") +
+            (v === 1 ? "◓" : v === 2 ? "◒" : "○")
+        )
+        .join(" ")
+    );
+  }
+
   /**
    * @param {import('../sqd/file').SiQADFile} file
    * @param {import('../types').TruthTable} truthTable
