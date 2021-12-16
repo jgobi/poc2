@@ -35,7 +35,9 @@ export class GeneticAlgorithm {
     if (!this.dirty) return;
     for (const ind of this.population) {
       await ind.getFitness(file, truthTable);
+      process.stdout.write(".");
     }
+    process.stdout.write("\n");
     this.population.sort(
       (a, b) => b.fitness - a.fitness || a.dbCount - b.dbCount
     );
