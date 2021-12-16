@@ -1,4 +1,5 @@
 node_modules
 simulation-files
 simulation-results
+runs
 *.sqd.bak
