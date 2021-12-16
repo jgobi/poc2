@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<siqad>
+  <program>
+    <file_purpose>simulation</file_purpose>
+    <version>0.3.3</version>
+    <date>2021-12-13 23:08:44</date>
+  </program>
+  <gui>
+    <zoom>0.0453381</zoom>
+    <displayed_region x1="-34.4081" y1="31.7613" x2="195.2" y2="125.06"/>
+    <scroll x="155" y="-145"/>
+  </gui>
+  <layers>
+    <layer_prop>
+      <name>Lattice</name>
+      <type>Lattice</type>
+      <role>Design</role>
+      <zoffset>0</zoffset>
+      <zheight>0</zheight>
+      <visible>1</visible>
+      <active>0</active>
+      <lat_vec>
+        <a1 x="3.84" y="0"/>
+        <a2 x="0" y="7.68"/>
+        <N>2</N>
+        <b1 x="0" y="0"/>
+        <b2 x="0" y="2.25"/>
+      </lat_vec>
+    </layer_prop>
+    <layer_prop>
+      <name>Screenshot Overlay</name>
+      <type>Misc</type>
+      <role>Overlay</role>
+      <zoffset>0</zoffset>
+      <zheight>0</zheight>
+      <visible>1</visible>
+      <active>0</active>
+    </layer_prop>
+    <layer_prop>
+      <name>Surface</name>
+      <type>DB</type>
+      <role>Design</role>
+      <zoffset>0</zoffset>
+      <zheight>0</zheight>
+      <visible>1</visible>
+      <active>0</active>
+    </layer_prop>
+    <layer_prop>
+      <name>Metal</name>
+      <type>Electrode</type>
+      <role>Design</role>
+      <zoffset>1000</zoffset>
+      <zheight>100</zheight>
+      <visible>1</visible>
+      <active>0</active>
+    </layer_prop>
+  </layers>
+  <design>
+    <layer type="Lattice"/>
+    <layer type="Misc"/>
+    <layer type="DB">
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="-4" m="2" l="0"/>
+        <physloc x="-15.36" y="15.36"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="-4" m="3" l="0"/>
+        <physloc x="-15.36" y="23.04"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="-4" m="5" l="0"/>
+        <physloc x="-15.36" y="38.4"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="-2" m="6" l="0"/>
+        <physloc x="-7.68" y="46.08"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="16" m="5" l="0"/>
+        <physloc x="61.44" y="38.4"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="20" m="5" l="0"/>
+        <physloc x="76.8" y="38.4"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="24" m="5" l="0"/>
+        <physloc x="92.16" y="38.4"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="26" m="5" l="0"/>
+        <physloc x="99.84" y="38.4"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="36" m="5" l="0"/>
+        <physloc x="138.24" y="38.4"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="-2" m="12" l="1"/>
+        <physloc x="-7.68" y="94.41"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="-4" m="13" l="1"/>
+        <physloc x="-15.36" y="102.09"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="-8" m="13" l="1"/>
+        <physloc x="-30.72" y="102.09"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="-10" m="13" l="1"/>
+        <physloc x="-38.4" y="102.09"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="13" m="6" l="0"/>
+        <physloc x="49.92" y="46.08"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="13" m="12" l="0"/>
+        <physloc x="49.92" y="92.16"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="15" m="13" l="1"/>
+        <physloc x="57.6" y="102.09"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="15" m="15" l="1"/>
+        <physloc x="57.6" y="117.45"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="15" m="17" l="0"/>
+        <physloc x="57.6" y="130.56"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="15" m="18" l="0"/>
+        <physloc x="57.6" y="138.24"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="15" m="23" l="1"/>
+        <physloc x="57.6" y="178.89"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="2" m="7" l="1"/>
+        <physloc x="7.68" y="56.01"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="2" m="11" l="0"/>
+        <physloc x="7.68" y="84.48"/>
+        <color>#ffc8c8c8</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="15" m="21" l="0"/>
+        <physloc x="57.6" y="161.28"/>
+        <color>#ffff0000</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="15" m="20" l="0"/>
+        <physloc x="57.6" y="153.6"/>
+        <color>#ffff0000</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="30" m="5" l="0"/>
+        <physloc x="115.2" y="38.4"/>
+        <color>#ffff0001</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="32" m="5" l="0"/>
+        <physloc x="122.88" y="38.4"/>
+        <color>#ffff0001</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="9" m="8" l="1"/>
+        <physloc x="34.56" y="63.69"/>
+        <color>#ff01ffff</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="6" m="9" l="0"/>
+        <physloc x="23.04" y="69.12"/>
+        <color>#ff01ffff</color>
+      </dbdot>
+      <dbdot>
+        <layer_id>2</layer_id>
+        <latcoord n="9" m="10" l="0"/>
+        <physloc x="34.56" y="76.8"/>
+        <color>#ff01ffff</color>
+      </dbdot>
+    </layer>
+    <layer type="Electrode"/>
+  </design>
+  <sim_params>
+    <T_e_inv_point>0.09995</T_e_inv_point>
+    <T_init>500</T_init>
+    <T_min>2</T_min>
+    <T_schedule>exponential</T_schedule>
+    <anneal_cycles>10000</anneal_cycles>
+    <debye_length>5</debye_length>
+    <eps_r>5.6</eps_r>
+    <hop_attempt_factor>5</hop_attempt_factor>
+    <num_instances>40</num_instances>
+    <phys_validity_check_cycles>10</phys_validity_check_cycles>
+    <reset_T_during_v_freeze_reset>false</reset_T_during_v_freeze_reset>
+    <result_queue_size>0.1</result_queue_size>
+    <strategic_v_freeze_reset>false</strategic_v_freeze_reset>
+    <v_freeze_end_point>0.4</v_freeze_end_point>
+    <v_freeze_init>-1</v_freeze_init>
+    <v_freeze_reset>-1</v_freeze_reset>
+    <v_freeze_threshold>4</v_freeze_threshold>
+    <mu>-0.32</mu>
+    <muzm>-0.32</muzm>
+  </sim_params>
+</siqad>
