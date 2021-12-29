@@ -14,11 +14,27 @@ export function colorize(path, n, color) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  if (process.argv.length < 5) {
-    console.error("Usage: node colorize.js path.xml number_to_color color_hex");
+  if (
+    process.argv.length < 4 ||
+    !["in", "out", "area"].includes(process.argv[3])
+  ) {
+    console.error("Usage: node colorize.js path.xml area|in|out [nth]");
     process.exit(1);
   }
-  colorize(process.argv[2], process.argv[3], process.argv[4]);
+
+  const nth = +process.argv[4];
+  const suf = nth.toString().padStart(2, "0");
+
+  if (process.argv[3] === "area") {
+    colorize(process.argv[2], 4, "#ff00ffff");
+  } else if (Number.isNaN(nth) || nth < 0 || nth > 99) {
+    console.error("nth must be between 0 and 99, both inclusive");
+    process.exit(1);
+  } else if (process.argv[3] === "in") {
+    colorize(process.argv[2], 1, "#ffffff" + suf);
+  } else if (process.argv[3] === "out") {
+    colorize(process.argv[2], 2, "#ffff00" + suf);
+  }
   console.log("Backup file saved as: " + process.argv[2] + ".bak");
   console.log("Done");
 }
