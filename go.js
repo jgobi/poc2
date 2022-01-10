@@ -114,9 +114,9 @@ function saveLog(runId, ga, bestIndividual, truthTable, allTimeIndividuals) {
           geneticCode: bestIndividual.geneticCode.join(""),
         },
         currentPopulation: ga.population.map((ind) => ind.id),
-        individuals: Array.from(allTimeIndividuals.entries()),
         randomSeed: RANDOM_SEED,
         randomState: random.count,
+        individuals: Array.from(allTimeIndividuals.entries()),
       },
       null,
       2
