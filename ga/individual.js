@@ -75,7 +75,7 @@ export class Individual {
       simParams: { mu: "-0.32", num_instances: "-1", ...this.simParams },
       failFast: false,
       retainSimulationFiles: false,
-      generateSiQADResult: true,
+      generateSiQADResult: false,
     });
     this.results = results;
     this.fitness = results.score;

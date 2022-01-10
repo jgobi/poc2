@@ -1,3 +1,4 @@
+#!/bin/env node
 import fs from "fs";
 import { parseXML, stringifyXML } from "../xml.js";
 

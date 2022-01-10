@@ -1,6 +1,7 @@
+#!/bin/env node
 import fs from "fs";
 import { resolve } from "path";
-import { nanoid } from "nanoid";
+import { randomUUID } from "crypto";
 
 import cruzador from "./truth/tables/cruzador.js";
 import { SiQADFile } from "./sqd/file.js";
@@ -9,11 +10,15 @@ import { random, RANDOM_SEED, setRandomSeed } from "./random.js";
 import { Individual } from "./ga/individual.js";
 
 const NUM_GENERATIONS = 30;
+let NUM_INSTANCES = "-1";
 
 let POPULATION_SIZE = 50;
 let CROSSOVER_RATE = 0.9;
 let MUTATION_RATE = 0.1;
 let ELITISM_COUNT = 2;
+
+/** @type {Map<string, [string, number]>} */
+let allTimeIndividualsMap = new Map();
 
 /**
  *
@@ -28,7 +33,7 @@ export async function main(
   currentGeneration = 0,
   population
 ) {
-  const RUN_ID = nanoid();
+  const RUN_ID = randomUUID();
   console.log("Random seed:", RANDOM_SEED);
   console.log("Run id:", RUN_ID);
   console.log("Population size:", POPULATION_SIZE);
@@ -52,7 +57,7 @@ export async function main(
     ga.nextGeneration();
   } else {
     ga.generatePopulation(file.layout.area.width, file.layout.area.height, {
-      num_instances: "-1",
+      num_instances: NUM_INSTANCES,
     });
   }
 
@@ -68,7 +73,7 @@ export async function main(
     );
     console.log(ind.toString(true));
     try {
-      saveLog(RUN_ID, ga, ind, truthTable);
+      saveLog(RUN_ID, ga, ind, truthTable, allTimeIndividualsMap);
     } catch (error) {
       console.error("Error writing run log:", error);
     }
@@ -82,20 +87,21 @@ export async function main(
  * @param {GeneticAlgorithm} ga
  * @param {Individual} bestIndividual
  * @param {import('./types.js').TruthTable} truthTable
+ * @param {Map<string, [string, number]>} allTimeIndividuals
  */
-function saveLog(runId, ga, bestIndividual, truthTable) {
+function saveLog(runId, ga, bestIndividual, truthTable, allTimeIndividuals) {
+  // fill allTimeIndividuals map
+  for (let ind of ga.population) {
+    allTimeIndividuals.set(ind.id, [ind.geneticCode.join(""), ind.fitness]);
+  }
+
   const runsFolder = resolve("./runs");
   fs.mkdirSync(runsFolder, { recursive: true });
-  try {
-    fs.renameSync(
-      `${runsFolder}/${runId}.json`,
-      `${runsFolder}/.${runId}.json.bak`
-    );
-  } catch {}
   fs.writeFileSync(
-    `${runsFolder}/${runId}.json`,
+    `${runsFolder}/.${runId}.json.swp`,
     JSON.stringify(
       {
+        version: 2,
         runId,
         populationSize: POPULATION_SIZE,
         crossoverRate: CROSSOVER_RATE,
@@ -107,10 +113,8 @@ function saveLog(runId, ga, bestIndividual, truthTable) {
           ...bestIndividual,
           geneticCode: bestIndividual.geneticCode.join(""),
         },
-        population: ga.population.map((ind) => [
-          ind.geneticCode.join(""),
-          ind.fitness,
-        ]),
+        currentPopulation: ga.population.map((ind) => ind.id),
+        individuals: Array.from(allTimeIndividuals.entries()),
         randomSeed: RANDOM_SEED,
         randomState: random.count,
       },
@@ -118,7 +122,58 @@ function saveLog(runId, ga, bestIndividual, truthTable) {
       2
     )
   );
+  fs.renameSync(
+    `${runsFolder}/.${runId}.json.swp`,
+    `${runsFolder}/${runId}.json`
+  );
   console.log("\nRun log saved at:", `${runsFolder}/${runId}.json`);
+}
+
+/**
+ * @param {string} filePath
+ * @returns {{allTimeIndividuals: Map<string, [string, number]>, currentPopulation: Individual[], truthTable: import('./types.js').TruthTable, generationNumber: number }}
+ */
+function loadLog(filePath) {
+  console.log("Resuming from previous run...\n");
+  let prev = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+
+  if (prev.version !== 2) {
+    throw new Error(`Log version (${prev.version}) unsupported.`);
+  }
+
+  prev.allTimeIndividuals = new Map(prev.individuals);
+
+  setRandomSeed(prev.randomSeed);
+  for (let i = 0; i < prev.randomState; i++) random.double();
+  POPULATION_SIZE = prev.populationSize;
+  CROSSOVER_RATE = prev.crossoverRate;
+  MUTATION_RATE = prev.mutationRate;
+  ELITISM_COUNT = prev.elitismCount;
+
+  prev.currentPopulation = prev.currentPopulation.map((ind) => {
+    let [geneticCode, fitness] = prev.allTimeIndividuals.get(ind);
+    let newInd = new Individual(
+      prev.bestIndividual.width,
+      prev.bestIndividual.height,
+      prev.bestIndividual.simParams,
+      geneticCode.split("").map((v) => +v)
+    );
+    newInd.fitness = fitness;
+    return newInd;
+  });
+  prev.tt = prev.truthTable;
+  prev.truthTable = () => prev.tt;
+  console.log("Current best individual:");
+  console.log(
+    new Individual(
+      prev.bestIndividual.width,
+      prev.bestIndividual.height,
+      prev.bestIndividual.simParams,
+      prev.bestIndividual.geneticCode.split("").map((v) => +v)
+    ).toString()
+  );
+  console.log("---\n");
+  return prev;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -129,35 +184,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (process.argv.length < 4) {
     await main(process.argv[2], cruzador);
   } else {
-    console.log("Resuming from previous run...\n");
-    let prev = JSON.parse(fs.readFileSync(process.argv[3], "utf-8"));
-    setRandomSeed(prev.randomSeed);
-    for (let i = 0; i < prev.randomState; i++) random.double();
-    POPULATION_SIZE = prev.populationSize;
-    CROSSOVER_RATE = prev.crossoverRate;
-    MUTATION_RATE = prev.mutationRate;
-    ELITISM_COUNT = prev.elitismCount;
-    const population = prev.population.map((ind) => {
-      let newInd = new Individual(
-        prev.bestIndividual.width,
-        prev.bestIndividual.height,
-        prev.bestIndividual.simParams,
-        ind[0].split("").map((v) => +v)
-      );
-      newInd.fitness = ind[1];
-      return newInd;
-    });
-    const tt = () => prev.truthTable;
-    console.log("Current best individual:");
-    console.log(
-      new Individual(
-        prev.bestIndividual.width,
-        prev.bestIndividual.height,
-        prev.bestIndividual.simParams,
-        prev.bestIndividual.geneticCode.split("").map((v) => +v)
-      ).toString()
+    const prev = loadLog(process.argv[3]);
+    allTimeIndividualsMap = prev.allTimeIndividuals;
+    await main(
+      process.argv[2],
+      prev.truthTable,
+      prev.generationNumber,
+      prev.currentPopulation
     );
-    console.log("---\n");
-    await main(process.argv[2], tt, prev.generationNumber, population);
   }
 }

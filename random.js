@@ -1,7 +1,7 @@
-import { nanoid } from 'nanoid';
+import { randomUUID } from "crypto";
 import alea from "./alea.cjs";
 
-let RANDOM_SEED = nanoid();
+let RANDOM_SEED = randomUUID();
 let random = new alea(RANDOM_SEED); // prng
 
 function setRandomSeed(seed) {

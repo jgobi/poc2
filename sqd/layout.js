@@ -1,4 +1,4 @@
-import { nanoid } from 'nanoid';
+import { randomUUID } from "crypto";
 
 const colorSortFn = (a, b) =>
   a.color.toLowerCase().localeCompare(b.color.toLowerCase());
@@ -75,7 +75,7 @@ export class DBLayout {
    * @param {import('../types').DB[]} dbs
    */
   constructor(dbs) {
-    this.id = nanoid();
+    this.id = randomUUID();
     const parsed = parseDBs(dbs);
 
     this.area = {
@@ -110,7 +110,7 @@ export class DBLayout {
       )
         throw new OutOfBoundsError(db, area);
     }
-    this.id = nanoid();
+    this.id = randomUUID();
     this.inner = dbs;
     this.inner.forEach((db, i) => (db.index = this.fixed.length + i));
   }
