@@ -1,6 +1,6 @@
 import fs from "fs";
 import { resolve } from "path";
-import { randomBytes } from "crypto";
+import { nanoid } from "nanoid";
 
 import cruzador from "./truth/tables/cruzador.js";
 import { SiQADFile } from "./sqd/file.js";
@@ -28,7 +28,7 @@ export async function main(
   currentGeneration = 0,
   population
 ) {
-  const RUN_ID = randomBytes(8).toString("hex");
+  const RUN_ID = nanoid();
   console.log("Random seed:", RANDOM_SEED);
   console.log("Run id:", RUN_ID);
   console.log("Population size:", POPULATION_SIZE);
@@ -52,7 +52,7 @@ export async function main(
     ga.nextGeneration();
   } else {
     ga.generatePopulation(file.layout.area.width, file.layout.area.height, {
-      num_instances: "-1",
+      num_instances: "50",
     });
   }
 
@@ -67,11 +67,13 @@ export async function main(
       `Best individual: ${ind.id} (${ind.fitness}/${ind.results.maxScore})`
     );
     console.log(ind.toString(true));
+    try {
+      saveLog(RUN_ID, ga, ind, truthTable);
+    } catch (error) {
+      console.error("Error writing run log:", error);
+    }
     if (i < max - 1) ga.nextGeneration();
   }
-
-  const bestIndividual = await ga.getBestIndividual(file, truthTable);
-  saveLog(RUN_ID, ga, bestIndividual, truthTable);
 }
 
 /**
@@ -84,6 +86,12 @@ export async function main(
 function saveLog(runId, ga, bestIndividual, truthTable) {
   const runsFolder = resolve("./runs");
   fs.mkdirSync(runsFolder, { recursive: true });
+  try {
+    fs.renameSync(
+      `${runsFolder}/${runId}.json`,
+      `${runsFolder}/.${runId}.json.bak`
+    );
+  } catch {}
   fs.writeFileSync(
     `${runsFolder}/${runId}.json`,
     JSON.stringify(
