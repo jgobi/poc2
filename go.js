@@ -8,9 +8,9 @@ import { GeneticAlgorithm } from "./ga/algorithm.js";
 import { random, RANDOM_SEED, setRandomSeed } from "./random.js";
 import { Individual } from "./ga/individual.js";
 
-const NUM_GENERATIONS = 5;
+const NUM_GENERATIONS = 30;
 
-let POPULATION_SIZE = 20;
+let POPULATION_SIZE = 50;
 let CROSSOVER_RATE = 0.9;
 let MUTATION_RATE = 0.1;
 let ELITISM_COUNT = 2;
@@ -52,7 +52,7 @@ export async function main(
     ga.nextGeneration();
   } else {
     ga.generatePopulation(file.layout.area.width, file.layout.area.height, {
-      num_instances: "50",
+      num_instances: "-1",
     });
   }
 
