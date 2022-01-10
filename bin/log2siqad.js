@@ -10,12 +10,28 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
 
-async function main() {
-  const skipCheck = process.argv[2] === "--skip-check";
-  const trueArgv = process.argv.slice(skipCheck ? 3 : 2);
+function parseArgs(args) {
+  let trueArgv = args.slice(2);
+  const skipCheck = trueArgv.findIndex((v) => v === "--skip-check") + 1;
+  const nSimUsed = trueArgv.findIndex((v) => v === "-n") + 1;
+
+  let nSimulations = 1;
+
+  if (skipCheck && nSimUsed) {
+    console.error("Can't use -n and --skip-check at the same time.");
+    process.exit(1);
+  }
+  if (skipCheck) {
+    trueArgv.splice(skipCheck - 1, 1);
+    nSimulations = 0;
+  }
+  if (nSimUsed) {
+    let [_, n] = trueArgv.splice(nSimUsed - 1, 2);
+    nSimulations = n;
+  }
   if (trueArgv.length < 2) {
     console.error(
-      "Usage: node log2siqad.js [--skip-check] siqad-file.sqd log-file.json [destination-folder]"
+      "Usage: node log2siqad.js [-n num-simulations] [--skip-check] siqad-file.sqd log-file.json [destination-folder]"
     );
     process.exit(1);
   }
@@ -29,6 +45,18 @@ async function main() {
       ".json"
     )}`;
 
+  return {
+    nSimulations,
+    siqadFilePath,
+    logFilePath,
+    destinationFolder,
+  };
+}
+
+async function main() {
+  const { logFilePath, nSimulations, siqadFilePath, destinationFolder } =
+    parseArgs(process.argv);
+
   mkdirSync(destinationFolder, { recursive: true });
 
   const { individuals, bestIndividual, truthTable } = JSON.parse(
@@ -36,7 +64,10 @@ async function main() {
   );
   individuals.sort((a, b) => b[1][1] - a[1][1]);
   const maxFitness = individuals[0][1][1];
-  console.log(`Log file maximum fitness: ${maxFitness}\n`);
+  console.log(`Log file maximum fitness: ${maxFitness}.`);
+  console.log(
+    `Simulation will be ran ${nSimulations} times for each individual\n`
+  );
 
   const siqadFile = new SiQADFile();
   siqadFile.open(siqadFilePath);
@@ -54,23 +85,26 @@ async function main() {
       createInnerDBs(ind.getPhenotype(siqadFile.layout))
     );
 
-    let result = skipCheck;
+    let result = true;
 
     console.log(`Individual "${id}":\n${ind.toString(true)}`);
-    if (skipCheck) {
+    if (nSimulations === 0) {
       console.log(`Simulation skipped.\n`);
     } else {
       process.stdout.write("Running simulation... ");
-      const results = await run(siqadFile, () => truthTable, {
-        failFast: true,
-        generateSiQADResult: false,
-        retainSimulationFiles: false,
-        simParams: {
-          ...(bestIndividual.simParams || {}),
-          num_instances: "-1",
-        },
-      });
-      result = results.result;
+      for (let i = 0; i < nSimulations && result; i++) {
+        const results = await run(siqadFile, () => truthTable, {
+          failFast: true,
+          generateSiQADResult: false,
+          retainSimulationFiles: false,
+          simParams: {
+            ...(bestIndividual.simParams || {}),
+            num_instances: "-1",
+          },
+        });
+        result = results.result;
+        process.stdout.write(".");
+      }
       console.log(result ? "OK!\n" : "inaccurate results, rejected.\n");
     }
 
@@ -83,7 +117,7 @@ async function main() {
     }
   }
 
-  if (!skipCheck) console.log(`Generated ${c} accurate individuals.`);
+  if (nSimulations > 0) console.log(`Generated ${c} accurate individuals.`);
   else console.log(`Generated ${c} individuals with fitness ${maxFitness}.`);
   console.log("Done");
 }
