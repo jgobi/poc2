@@ -36,7 +36,7 @@ async function main() {
   );
   individuals.sort((a, b) => b[1][1] - a[1][1]);
   const maxFitness = individuals[0][1][1];
-  console.log("Max fitness: ", maxFitness);
+  console.log(`Log file maximum fitness: ${maxFitness}\n`);
 
   const siqadFile = new SiQADFile();
   siqadFile.open(siqadFilePath);
@@ -56,10 +56,11 @@ async function main() {
 
     let result = skipCheck;
 
+    console.log(`Individual "${id}":\n${ind.toString(true)}`);
     if (skipCheck) {
-      console.log(`Simulation for "${id}" skipped.`);
+      console.log(`Simulation skipped.\n`);
     } else {
-      process.stdout.write('Running simulation for "' + id + '"... ');
+      process.stdout.write("Running simulation... ");
       const results = await run(siqadFile, () => truthTable, {
         failFast: true,
         generateSiQADResult: false,
@@ -70,7 +71,7 @@ async function main() {
         },
       });
       result = results.result;
-      console.log(result ? "OK!" : "inaccurate results, rejected.");
+      console.log(result ? "OK!\n" : "inaccurate results, rejected.\n");
     }
 
     if (result) {

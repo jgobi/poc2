@@ -47,13 +47,21 @@ export class SiQADFile {
   }
 
   /**
-   *
+   * Load a SiQAD file from disk
    * @param {string} path
    */
   open(path) {
     this.path = path;
     const file = fs.readFileSync(path, "utf8");
-    this.parsed = parseXML(file);
+    return this.load(file);
+  }
+
+  /**
+   * Load a SiQAD xml from a string
+   * @param {string} xml
+   */
+  load(xml) {
+    this.parsed = parseXML(xml);
     const dbs = this.parsed?.siqad?.design?.layer
       ?.find((l) => l.$type === "DB")
       ?.dbdot?.map((db, index) => ({
