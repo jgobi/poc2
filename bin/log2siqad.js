@@ -29,7 +29,7 @@ function parseArgs(args) {
     let [_, n] = trueArgv.splice(nSimUsed - 1, 2);
     nSimulations = n;
   }
-  if (trueArgv.length < 2) {
+  if (trueArgv.length < 2 || trueArgv.some((v) => v.startsWith("-"))) {
     console.error(
       "Usage: node log2siqad.js [-n num-simulations] [--skip-check] siqad-file.sqd log-file.json [destination-folder]"
     );
@@ -66,15 +66,26 @@ async function main() {
   const maxFitness = individuals[0][1][1];
   console.log(`Log file maximum fitness: ${maxFitness}.`);
   console.log(
-    `Simulation will be ran ${nSimulations} times for each individual\n`
+    `Simulation will be ran ${nSimulations} times for each individual`
   );
+
+  let uniqueIndividuals = new Map();
+  individuals.forEach(([id, [geneticCode, fitness]]) => {
+    if (fitness >= maxFitness) {
+      uniqueIndividuals.set(geneticCode, {
+        id,
+        n: (uniqueIndividuals.get(geneticCode)?.n || 0) + 1,
+      });
+    }
+  });
+  console.log(`Analyzing ${uniqueIndividuals.size} unique individuals.\n`);
 
   const siqadFile = new SiQADFile();
   siqadFile.open(siqadFilePath);
 
   let c = 0;
-  for (const [id, [geneticCode, fitness]] of individuals) {
-    if (fitness < maxFitness) break;
+  let i = 1;
+  for (const [geneticCode, { id, n }] of uniqueIndividuals.entries()) {
     const ind = new Individual(
       bestIndividual.width,
       bestIndividual.height,
@@ -87,7 +98,11 @@ async function main() {
 
     let result = true;
 
-    console.log(`Individual "${id}":\n${ind.toString(true)}`);
+    console.log(
+      `Individual ${i++} of ${
+        uniqueIndividuals.size
+      } ("${id}") (${n} copies found):\n${ind.toString(true)}`
+    );
     if (nSimulations === 0) {
       console.log(`Simulation skipped.\n`);
     } else {
