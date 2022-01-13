@@ -1,6 +1,6 @@
 #!/bin/env node
 import { Console } from "console";
-import { createWriteStream, mkdirSync, readFileSync } from "fs";
+import { createWriteStream, existsSync, mkdirSync, readFileSync } from "fs";
 import { basename } from "path";
 import { Individual } from "../ga/individual.js";
 import { SiQADFile } from "../sqd/file.js";
@@ -61,11 +61,23 @@ function parseArgs(args) {
       ".json"
     )}`;
 
+  let trueDestinationFolder = destinationFolder;
+  let i = 1;
+  while (existsSync(trueDestinationFolder)) {
+    trueDestinationFolder = `${destinationFolder} (${i++})`;
+  }
+
+  if (destinationFolder !== trueDestinationFolder) {
+    console.error(
+      `Destination folder already exists, using "${trueDestinationFolder}".`
+    );
+  }
+
   return {
     nSimulations,
     siqadFilePath,
     logFilePath,
-    destinationFolder,
+    destinationFolder: trueDestinationFolder,
   };
 }
 
