@@ -1,5 +1,6 @@
 #!/bin/env node
-import { mkdirSync, readFileSync } from "fs";
+import { Console } from "console";
+import { createWriteStream, mkdirSync, readFileSync } from "fs";
 import { basename } from "path";
 import { Individual } from "../ga/individual.js";
 import { SiQADFile } from "../sqd/file.js";
@@ -8,6 +9,21 @@ import { run } from "../truth/runner.js";
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   main();
+}
+
+function createLogger(path) {
+  const file = createWriteStream(path, { encoding: "utf-8", flags: "w" });
+  const myConsole = new Console(file);
+  return {
+    log(...args) {
+      console.log(...args);
+      myConsole.log(...args);
+    },
+    write(str) {
+      process.stdout.write(str);
+      file.write(str);
+    },
+  };
 }
 
 function parseArgs(args) {
@@ -58,14 +74,15 @@ async function main() {
     parseArgs(process.argv);
 
   mkdirSync(destinationFolder, { recursive: true });
+  const logger = createLogger(destinationFolder + "/output.log");
 
   const { individuals, bestIndividual, truthTable } = JSON.parse(
     readFileSync(logFilePath, "utf-8")
   );
   individuals.sort((a, b) => b[1][1] - a[1][1]);
   const maxFitness = individuals[0][1][1];
-  console.log(`Log file maximum fitness: ${maxFitness}.`);
-  console.log(
+  logger.log(`Log file maximum fitness: ${maxFitness}.`);
+  logger.log(
     `Simulation will be ran ${nSimulations} times for each individual`
   );
 
@@ -78,7 +95,7 @@ async function main() {
       });
     }
   });
-  console.log(`Analyzing ${uniqueIndividuals.size} unique individuals.\n`);
+  logger.log(`Analyzing ${uniqueIndividuals.size} unique individuals.\n`);
 
   const siqadFile = new SiQADFile();
   siqadFile.open(siqadFilePath);
@@ -98,15 +115,15 @@ async function main() {
 
     let result = true;
 
-    console.log(
+    logger.log(
       `Individual ${i++} of ${
         uniqueIndividuals.size
       } ("${id}") (${n} copies found):\n${ind.toString(true)}`
     );
     if (nSimulations === 0) {
-      console.log(`Simulation skipped.\n`);
+      logger.log(`Simulation skipped.\n`);
     } else {
-      process.stdout.write("Running simulation... ");
+      logger.write("Running simulation... ");
       for (let i = 0; i < nSimulations && result; i++) {
         const results = await run(siqadFile, () => truthTable, {
           failFast: true,
@@ -118,9 +135,9 @@ async function main() {
           },
         });
         result = results.result;
-        process.stdout.write(".");
+        logger.write(".");
       }
-      console.log(result ? "OK!\n" : "inaccurate results, rejected.\n");
+      logger.log(result ? "OK!\n" : "inaccurate results, rejected.\n");
     }
 
     if (result) {
@@ -132,7 +149,7 @@ async function main() {
     }
   }
 
-  if (nSimulations > 0) console.log(`Generated ${c} accurate individuals.`);
-  else console.log(`Generated ${c} individuals with fitness ${maxFitness}.`);
-  console.log("Done");
+  if (nSimulations > 0) logger.log(`Generated ${c} accurate individuals.`);
+  else logger.log(`Generated ${c} individuals with fitness ${maxFitness}.`);
+  logger.log("Done");
 }
