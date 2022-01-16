@@ -10,29 +10,41 @@ import { random, RANDOM_SEED, setRandomSeed } from "./random.js";
 import { Individual } from "./ga/individual.js";
 
 const NUM_GENERATIONS = 30;
-let NUM_INSTANCES = "-1";
 
-let POPULATION_SIZE = 50;
-let CROSSOVER_RATE = 0.9;
-let MUTATION_RATE = 0.1;
-let ELITISM_COUNT = 2;
+/** @type {import('./types.js').GeneticAlgorithmState} */
+const GA_STATE = {
+  options: {
+    crossoverRate: 0.9,
+    elitismCount: 2,
+    mutationRate: 0.1,
+    populationSize: 50,
+    truthTable: cruzador,
+    simulationParameters: {
+      num_instances: "-1",
+    },
+  },
+  get randomSeed() {
+    return RANDOM_SEED;
+  },
+  get randomState() {
+    return random.count;
+  },
+  statistics: {
+    generations: [],
+    individuals: new Map(),
+  },
+};
 
-/** @type {Map<string, [string, number]>} */
-let allTimeIndividualsMap = new Map();
+const INDIVIDUAL_PROPERTIES = {
+  width: 0,
+  height: 0,
+};
 
 /**
  *
  * @param {string} path
- * @param {import('./types.js').TruthTable} truthTable
- * @param {number} [currentGeneration]
- * @param {number[][]} population
  */
-export async function main(
-  path,
-  truthTable,
-  currentGeneration = 0,
-  population
-) {
+export async function main(path) {
   const RUN_ID = randomUUID();
   console.log("Random seed:", RANDOM_SEED);
   console.log("Run id:", RUN_ID);
@@ -46,34 +58,54 @@ export async function main(
   file.open(path);
 
   const ga = new GeneticAlgorithm(
-    POPULATION_SIZE,
-    MUTATION_RATE,
-    CROSSOVER_RATE,
-    ELITISM_COUNT
+    GA_STATE.options.populationSize,
+    GA_STATE.options.mutationRate,
+    GA_STATE.options.crossoverRate,
+    GA_STATE.options.elitismCount
   );
-  if (population) {
-    ga.generationCount = currentGeneration - 1;
-    ga.population = population;
+  if (GA_STATE.statistics.generations > 0) {
+    // if resuming evolution
+    ga.generationCount = GA_STATE.statistics.generations.length - 1;
+    ga.population = GA_STATE.statistics.generations[
+      ga.generationCount
+    ].population.map((id) => {
+      let ind = GA_STATE.statistics.individuals.get(id);
+      let newInd = new Individual(
+        file.layout.area.width,
+        file.layout.area.height,
+        GA_STATE.options.simulationParameters,
+        ind.gc.split("").map((v) => +v)
+      );
+      newInd.fitness = ind.f;
+      return newInd;
+    });
     ga.nextGeneration();
   } else {
-    ga.generatePopulation(file.layout.area.width, file.layout.area.height, {
-      num_instances: NUM_INSTANCES,
-    });
+    // starting evolution from scratch
+    ga.generatePopulation(
+      file.layout.area.width,
+      file.layout.area.height,
+      GA_STATE.options.simulationParameters
+    );
   }
 
-  const max = NUM_GENERATIONS + currentGeneration;
+  INDIVIDUAL_PROPERTIES.width = ga.population[0].width;
+  INDIVIDUAL_PROPERTIES.height = ga.population[0].height;
+
+  const max = NUM_GENERATIONS + ga.generationCount;
   for (let i = currentGeneration; i < max; i++) {
     console.log("\nGeneration", i + 1, "of", max);
     const qtd = ga.population.map((p) => p.dbCount);
     qtd.sort((a, b) => a - b);
-    console.log("num DBs: min:", qtd.shift(), "| max:", qtd.pop());
-    const ind = await ga.getBestIndividual(file, truthTable);
+    console.log("Min DB count:", qtd.shift(), "| Max DB count:", qtd.pop());
+    const ind = await ga.getBestIndividual(file, GA_STATE.options.truthTable);
     console.log(
       `Best individual: ${ind.id} (${ind.fitness}/${ind.results.maxScore})`
     );
     console.log(ind.toString(true));
     try {
-      saveLog(RUN_ID, ga, ind, truthTable, allTimeIndividualsMap);
+      collectStatisticsCurrentGeneration(ga, ind);
+      saveLog(RUN_ID);
     } catch (error) {
       console.error("Error writing run log:", error);
     }
@@ -83,44 +115,46 @@ export async function main(
 
 /**
  *
- * @param {string} runId
  * @param {GeneticAlgorithm} ga
  * @param {Individual} bestIndividual
- * @param {import('./types.js').TruthTable} truthTable
- * @param {Map<string, [string, number]>} allTimeIndividuals
  */
-function saveLog(runId, ga, bestIndividual, truthTable, allTimeIndividuals) {
-  // fill allTimeIndividuals map
+function collectStatisticsCurrentGeneration(ga, bestIndividual) {
   for (let ind of ga.population) {
-    allTimeIndividuals.set(ind.id, [ind.geneticCode.join(""), ind.fitness]);
+    GA_STATE.statistics.individuals.set(ind.id, {
+      gc: ind.geneticCode.join(""),
+      f: ind.fitness,
+      db: ind.dbCount,
+    });
   }
 
+  GA_STATE.statistics.generations.push({
+    bestIndividual: bestIndividual.id,
+    population: ga.population.map((ind) => ind.id),
+  });
+}
+
+/**
+ *
+ * @param {string} runId
+ */
+function saveLog(runId) {
   const runsFolder = resolve("./runs");
   fs.mkdirSync(runsFolder, { recursive: true });
   fs.writeFileSync(
     `${runsFolder}/.${runId}.json.swp`,
-    JSON.stringify(
-      {
-        version: 2,
-        runId,
-        populationSize: POPULATION_SIZE,
-        crossoverRate: CROSSOVER_RATE,
-        mutationRate: MUTATION_RATE,
-        elitismCount: ELITISM_COUNT,
-        generationNumber: ga.generationCount + 1,
-        truthTable: truthTable(),
-        bestIndividual: {
-          ...bestIndividual,
-          geneticCode: bestIndividual.geneticCode.join(""),
-        },
-        currentPopulation: ga.population.map((ind) => ind.id),
-        randomSeed: RANDOM_SEED,
-        randomState: random.count,
-        individuals: Array.from(allTimeIndividuals.entries()),
+    JSON.stringify({
+      version: 3,
+      runId,
+      options: {
+        ...GA_STATE.options,
+        truthTable: GA_STATE.options.truthTable(),
       },
-      null,
-      2
-    )
+      individualProperties: INDIVIDUAL_PROPERTIES, // FIXME: remove this field
+      randomSeed: GA_STATE.randomSeed,
+      randomState: GA_STATE.randomState,
+      generations: GA_STATE.statistics.generations,
+      individuals: Array.from(GA_STATE.statistics.individuals.entries()),
+    })
   );
   fs.renameSync(
     `${runsFolder}/.${runId}.json.swp`,
@@ -137,43 +171,37 @@ function loadLog(filePath) {
   console.log("Resuming from previous run...\n");
   let prev = JSON.parse(fs.readFileSync(filePath, "utf-8"));
 
-  if (prev.version !== 2) {
+  if (prev.version !== 3) {
     throw new Error(`Log version (${prev.version}) unsupported.`);
   }
 
-  prev.allTimeIndividuals = new Map(prev.individuals);
+  setRandomSeed(prev.randomSeed, prev.randomState);
 
-  setRandomSeed(prev.randomSeed);
-  for (let i = 0; i < prev.randomState; i++) random.double();
-  POPULATION_SIZE = prev.populationSize;
-  CROSSOVER_RATE = prev.crossoverRate;
-  MUTATION_RATE = prev.mutationRate;
-  ELITISM_COUNT = prev.elitismCount;
+  GA_STATE.options = {
+    ...prev.options,
+    truthTable: () => prev.options.truthTable,
+  };
+  GA_STATE.statistics.generations = prev.generations;
+  GA_STATE.statistics.individuals = new Map(prev.individuals);
 
-  prev.currentPopulation = prev.currentPopulation.map((ind) => {
-    let [geneticCode, fitness] = prev.allTimeIndividuals.get(ind);
-    let newInd = new Individual(
-      prev.bestIndividual.width,
-      prev.bestIndividual.height,
-      prev.bestIndividual.simParams,
-      geneticCode.split("").map((v) => +v)
-    );
-    newInd.fitness = fitness;
-    return newInd;
-  });
-  prev.tt = prev.truthTable;
-  prev.truthTable = () => prev.tt;
+  INDIVIDUAL_PROPERTIES.width = prev.individualProperties.width;
+  INDIVIDUAL_PROPERTIES.height = prev.individualProperties.height;
+
   console.log("Current best individual:");
+  const best = GA_STATE.statistics.individuals.get(
+    GA_STATE.statistics.generations[GA_STATE.statistics.generations.length - 1]
+      .bestIndividual
+  );
   console.log(
     new Individual(
-      prev.bestIndividual.width,
-      prev.bestIndividual.height,
-      prev.bestIndividual.simParams,
-      prev.bestIndividual.geneticCode.split("").map((v) => +v)
+      INDIVIDUAL_PROPERTIES.width,
+      INDIVIDUAL_PROPERTIES.height,
+      GA_STATE.options.simulationParameters,
+      best.gc.split("").map((v) => +v)
     ).toString()
   );
+  console.log(`DB Count: ${best.db}; Fitness: ${best.f}`);
   console.log("---\n");
-  return prev;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -181,16 +209,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.error("Usage: node go.js file.sqd [continue.json]");
     process.exit(1);
   }
-  if (process.argv.length < 4) {
-    await main(process.argv[2], cruzador);
-  } else {
-    const prev = loadLog(process.argv[3]);
-    allTimeIndividualsMap = prev.allTimeIndividuals;
-    await main(
-      process.argv[2],
-      prev.truthTable,
-      prev.generationNumber,
-      prev.currentPopulation
-    );
+  if (process.argv.length >= 4) {
+    loadLog(process.argv[3]);
   }
+  await main(process.argv[2]);
 }

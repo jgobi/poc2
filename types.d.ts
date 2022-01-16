@@ -42,3 +42,34 @@ export interface SimulationParameters {
   v_freeze_reset: string;
   v_freeze_threshold: string;
 }
+
+export interface IndividualStatistics {
+  f: number;
+  gc: string;
+  db: number;
+}
+export interface GenerationStatistics {
+  bestIndividual: string;
+  population: string[];
+}
+
+export interface GeneticAlgorithmStatistics {
+  individuals: Map<string, IndividualStatistics>;
+  generations: GenerationStatistics[];
+}
+
+export interface GeneticAlgorithmOptions {
+  populationSize: number;
+  crossoverRate: number;
+  mutationRate: number;
+  elitismCount: number;
+  truthTable: TruthTable;
+  simulationParameters: SimulationParameters;
+}
+
+export interface GeneticAlgorithmState {
+  randomSeed: string;
+  randomState: number;
+  options: GeneticAlgorithmOptions;
+  statistics: GeneticAlgorithmStatistics;
+}
