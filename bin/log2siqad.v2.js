@@ -47,7 +47,7 @@ function parseArgs(args) {
   }
   if (trueArgv.length < 2 || trueArgv.some((v) => v.startsWith("-"))) {
     console.error(
-      "Usage: node log2siqad.js [-n num-simulations] [--skip-check] siqad-file.sqd log-file.json [destination-folder]"
+      "Usage: node log2siqad.v2.js [-n num-simulations] [--skip-check] siqad-file.sqd log-file.json [destination-folder]"
     );
     process.exit(1);
   }
@@ -85,12 +85,20 @@ async function main() {
   const { logFilePath, nSimulations, siqadFilePath, destinationFolder } =
     parseArgs(process.argv);
 
+  const { version, individuals, bestIndividual, truthTable } = JSON.parse(
+    readFileSync(logFilePath, "utf-8")
+  );
+  if (version !== 2) {
+    console.log(
+      `This script only supports version 2 log file as input. You provided a log file version ${
+        version || 1
+      }.`
+    );
+  }
+
   mkdirSync(destinationFolder, { recursive: true });
   const logger = createLogger(destinationFolder + "/output.log");
 
-  const { individuals, bestIndividual, truthTable } = JSON.parse(
-    readFileSync(logFilePath, "utf-8")
-  );
   individuals.sort((a, b) => b[1][1] - a[1][1]);
   const maxFitness = individuals[0][1][1];
   logger.log(`Log file maximum fitness: ${maxFitness}.`);
