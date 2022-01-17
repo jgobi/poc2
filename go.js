@@ -1,15 +1,15 @@
 #!/bin/env node
 import fs from "fs";
+import arg from "arg";
 import { resolve } from "path";
 import { randomUUID } from "crypto";
 
-import cruzador from "./truth/tables/cruzador.js";
 import { SiQADFile } from "./sqd/file.js";
 import { GeneticAlgorithm } from "./ga/algorithm.js";
 import { random, RANDOM_SEED, setRandomSeed } from "./random.js";
 import { Individual } from "./ga/individual.js";
 
-const NUM_GENERATIONS = 30;
+let NUM_GENERATIONS = 30;
 
 /** @type {import('./types.js').GeneticAlgorithmState} */
 const GA_STATE = {
@@ -18,7 +18,7 @@ const GA_STATE = {
     elitismCount: 2,
     mutationRate: 0.1,
     populationSize: 50,
-    truthTable: cruzador,
+    truthTable: null,
     simulationParameters: {
       num_instances: "-1",
     },
@@ -35,27 +35,19 @@ const GA_STATE = {
   },
 };
 
-const INDIVIDUAL_PROPERTIES = {
-  width: 0,
-  height: 0,
-};
-
 /**
  *
- * @param {string} path
+ * @param {SiQADFile} file
  */
-export async function main(path) {
+export async function main(file) {
   const RUN_ID = randomUUID();
-  console.log("Random seed:", RANDOM_SEED);
+  console.log("Random seed:", GA_STATE.randomSeed);
   console.log("Run id:", RUN_ID);
-  console.log("Population size:", POPULATION_SIZE);
-  console.log("Crossover rate:", CROSSOVER_RATE);
-  console.log("Mutation rate:", MUTATION_RATE);
-  console.log("Elitism count:", ELITISM_COUNT);
+  console.log("Population size:", GA_STATE.options.populationSize);
+  console.log("Crossover rate:", GA_STATE.options.crossoverRate);
+  console.log("Mutation rate:", GA_STATE.options.mutationRate);
+  console.log("Elitism count:", GA_STATE.options.elitismCount);
   console.log("---");
-
-  const file = new SiQADFile();
-  file.open(path);
 
   const ga = new GeneticAlgorithm(
     GA_STATE.options.populationSize,
@@ -63,7 +55,7 @@ export async function main(path) {
     GA_STATE.options.crossoverRate,
     GA_STATE.options.elitismCount
   );
-  if (GA_STATE.statistics.generations > 0) {
+  if (GA_STATE.statistics.generations.length > 0) {
     // if resuming evolution
     ga.generationCount = GA_STATE.statistics.generations.length - 1;
     ga.population = GA_STATE.statistics.generations[
@@ -89,11 +81,8 @@ export async function main(path) {
     );
   }
 
-  INDIVIDUAL_PROPERTIES.width = ga.population[0].width;
-  INDIVIDUAL_PROPERTIES.height = ga.population[0].height;
-
   const max = NUM_GENERATIONS + ga.generationCount;
-  for (let i = currentGeneration; i < max; i++) {
+  for (let i = ga.generationCount; i < max; i++) {
     console.log("\nGeneration", i + 1, "of", max);
     const qtd = ga.population.map((p) => p.dbCount);
     qtd.sort((a, b) => a - b);
@@ -105,7 +94,7 @@ export async function main(path) {
     console.log(ind.toString(true));
     try {
       collectStatisticsCurrentGeneration(ga, ind);
-      saveLog(RUN_ID);
+      saveLog(RUN_ID, file);
     } catch (error) {
       console.error("Error writing run log:", error);
     }
@@ -136,25 +125,30 @@ function collectStatisticsCurrentGeneration(ga, bestIndividual) {
 /**
  *
  * @param {string} runId
+ * @param {{path: string, content: string}} siqadFile
  */
-function saveLog(runId) {
+function saveLog(runId, siqadFile) {
   const runsFolder = resolve("./runs");
   fs.mkdirSync(runsFolder, { recursive: true });
   fs.writeFileSync(
     `${runsFolder}/.${runId}.json.swp`,
-    JSON.stringify({
-      version: 3,
-      runId,
-      options: {
-        ...GA_STATE.options,
-        truthTable: GA_STATE.options.truthTable(),
+    JSON.stringify(
+      {
+        version: 3,
+        runId,
+        options: {
+          ...GA_STATE.options,
+          truthTable: GA_STATE.options.truthTable(),
+        },
+        randomSeed: GA_STATE.randomSeed,
+        randomState: GA_STATE.randomState,
+        generations: GA_STATE.statistics.generations,
+        individuals: Array.from(GA_STATE.statistics.individuals.entries()),
+        siqadFile,
       },
-      individualProperties: INDIVIDUAL_PROPERTIES, // FIXME: remove this field
-      randomSeed: GA_STATE.randomSeed,
-      randomState: GA_STATE.randomState,
-      generations: GA_STATE.statistics.generations,
-      individuals: Array.from(GA_STATE.statistics.individuals.entries()),
-    })
+      null,
+      2
+    )
   );
   fs.renameSync(
     `${runsFolder}/.${runId}.json.swp`,
@@ -165,7 +159,7 @@ function saveLog(runId) {
 
 /**
  * @param {string} filePath
- * @returns {{allTimeIndividuals: Map<string, [string, number]>, currentPopulation: Individual[], truthTable: import('./types.js').TruthTable, generationNumber: number }}
+ * @returns {{ siqadFile: SiQADFile }}
  */
 function loadLog(filePath) {
   console.log("Resuming from previous run...\n");
@@ -184,8 +178,8 @@ function loadLog(filePath) {
   GA_STATE.statistics.generations = prev.generations;
   GA_STATE.statistics.individuals = new Map(prev.individuals);
 
-  INDIVIDUAL_PROPERTIES.width = prev.individualProperties.width;
-  INDIVIDUAL_PROPERTIES.height = prev.individualProperties.height;
+  const siqadFile = new SiQADFile();
+  siqadFile.load(prev.siqadFile.path, prev.siqadFile.content);
 
   console.log("Current best individual:");
   const best = GA_STATE.statistics.individuals.get(
@@ -194,23 +188,137 @@ function loadLog(filePath) {
   );
   console.log(
     new Individual(
-      INDIVIDUAL_PROPERTIES.width,
-      INDIVIDUAL_PROPERTIES.height,
+      siqadFile.layout.area.width,
+      siqadFile.layout.area.height,
       GA_STATE.options.simulationParameters,
       best.gc.split("").map((v) => +v)
     ).toString()
   );
   console.log(`DB Count: ${best.db}; Fitness: ${best.f}`);
   console.log("---\n");
+
+  return { siqadFile };
 }
 
+// ---- Execução
+
 if (import.meta.url === `file://${process.argv[1]}`) {
-  if (process.argv.length < 3) {
-    console.error("Usage: node go.js file.sqd [continue.json]");
+  function help() {
+    console.error(
+      "Usage: node go.js [-n 30] [-c run-log.json] [-t truth-table.js [-o options.json] siqad-file.sqd]"
+    );
     process.exit(1);
   }
-  if (process.argv.length >= 4) {
-    loadLog(process.argv[3]);
+  function optionsHelp() {
+    console.error(
+      `The options file, if supplied, must be a JSON containing an object with one or more of the properties in the example bellow (which shows the default values for them):
+{
+  "crossoverRate": 0.9,
+  "elitismCount": 2,
+  "mutationRate": 0.1,
+  "populationSize": 50,
+  "simulationParameters": {
+    "T_e_inv_point": "0.09995",
+    "T_init": "500",
+    "T_min": "2",
+    "T_schedule": "exponential",
+    "anneal_cycles": "10000",
+    "debye_length": "5",
+    "eps_r": "5.6",
+    "hop_attempt_factor": "5",
+    "num_instances": "-1",
+    "phys_validity_check_cycles": "10",
+    "reset_T_during_v_freeze_reset": "false",
+    "result_queue_size": "0.1",
+    "strategic_v_freeze_reset": "false",
+    "v_freeze_end_point": "0.4",
+    "v_freeze_init": "-1",
+    "v_freeze_reset": "-1",
+    "v_freeze_threshold": "4",
+    "muzn": "-0.32"
   }
-  await main(process.argv[2]);
+}`
+    );
+    process.exit(1);
+  }
+
+  let args;
+  try {
+    args = arg({
+      "-n": Number,
+      "-c": String,
+      "-t": String,
+      "-o": String,
+    });
+  } catch (err) {
+    if (err instanceof arg.ArgError) {
+      console.log(err.message);
+      help();
+    } else throw err;
+  }
+
+  if (args["-n"]) NUM_GENERATIONS = parseInt(args["-n"]);
+
+  if (args["-c"] && (args["-t"] || args["-o"] || args._.length)) {
+    console.error("You can either start or resume an evolution, not both!");
+    help();
+  }
+
+  if (args["-c"]) {
+    const { siqadFile } = loadLog(args["-c"]);
+    await main(siqadFile);
+  } else if (args["-t"] && args._.length === 1) {
+    GA_STATE.options.truthTable = (await import("./" + args["-t"])).default;
+    if (args["-o"]) {
+      try {
+        const options = JSON.parse(fs.readFileSync(args["-o"], "utf-8"));
+        let opts = [
+          "crossoverRate",
+          "elitismCount",
+          "mutationRate",
+          "populationSize",
+        ];
+        let simParams = [
+          "T_e_inv_point",
+          "T_init",
+          "T_min",
+          "T_schedule",
+          "anneal_cycles",
+          "debye_length",
+          "eps_r",
+          "hop_attempt_factor",
+          "num_instances",
+          "phys_validity_check_cycles",
+          "reset_T_during_v_freeze_reset",
+          "result_queue_size",
+          "strategic_v_freeze_reset",
+          "v_freeze_end_point",
+          "v_freeze_init",
+          "v_freeze_reset",
+          "v_freeze_threshold",
+          "muzn",
+        ];
+        for (const opt of opts) {
+          let n = parseFloat(options[opt], 10);
+          if (!Number.isNaN(n)) GA_STATE.options[opt] = n;
+        }
+        if (options.simulationParameters) {
+          for (const opt of simParams) {
+            if (options.simulationParameters[opt] != null) {
+              GA_STATE.options.simulationParameters[opt] =
+                options.simulationParameters[opt].toString();
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Invalid options file.", err);
+        optionsHelp();
+      }
+    }
+    const siqadFile = new SiQADFile();
+    siqadFile.open(args._[0]);
+    await main(siqadFile);
+  } else {
+    help();
+  }
 }

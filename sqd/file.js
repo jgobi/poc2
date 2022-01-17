@@ -51,16 +51,17 @@ export class SiQADFile {
    * @param {string} path
    */
   open(path) {
-    this.path = path;
     const file = fs.readFileSync(path, "utf8");
-    return this.load(file);
+    return this.load(path, file);
   }
 
   /**
    * Load a SiQAD xml from a string
+   * @param {string} fakePath the path is used internally, so you need to provide one even if it is fake
    * @param {string} xml
    */
-  load(xml) {
+  load(fakePath, xml) {
+    this.path = fakePath;
     this.parsed = parseXML(xml);
     const dbs = this.parsed?.siqad?.design?.layer
       ?.find((l) => l.$type === "DB")

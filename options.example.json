@@ -1,0 +1,26 @@
+{
+  "crossoverRate": 0.9,
+  "elitismCount": 2,
+  "mutationRate": 0.1,
+  "populationSize": 50,
+  "simulationParameters": {
+    "T_e_inv_point": "0.09995",
+    "T_init": "500",
+    "T_min": "2",
+    "T_schedule": "exponential",
+    "anneal_cycles": "10000",
+    "debye_length": "5",
+    "eps_r": "5.6",
+    "hop_attempt_factor": "5",
+    "num_instances": "-1",
+    "phys_validity_check_cycles": "10",
+    "reset_T_during_v_freeze_reset": "false",
+    "result_queue_size": "0.1",
+    "strategic_v_freeze_reset": "false",
+    "v_freeze_end_point": "0.4",
+    "v_freeze_init": "-1",
+    "v_freeze_reset": "-1",
+    "v_freeze_threshold": "4",
+    "muzn": "-0.32"
+  }
+}
