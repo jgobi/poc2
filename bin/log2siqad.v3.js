@@ -1,4 +1,5 @@
 #!/bin/env node
+import arg from "arg";
 import { Console } from "console";
 import { createWriteStream, existsSync, mkdirSync, readFileSync } from "fs";
 import { basename } from "path";
@@ -26,38 +27,54 @@ function createLogger(path) {
   };
 }
 
-function parseArgs(args) {
-  let trueArgv = args.slice(2);
-  const skipCheck = trueArgv.findIndex((v) => v === "--skip-check") + 1;
-  const nSimUsed = trueArgv.findIndex((v) => v === "-n") + 1;
-
-  let nSimulations = 1;
-
-  if (skipCheck && nSimUsed) {
-    console.error("Can't use -n and --skip-check at the same time.");
-    process.exit(1);
-  }
-  if (skipCheck) {
-    trueArgv.splice(skipCheck - 1, 1);
-    nSimulations = 0;
-  }
-  if (nSimUsed) {
-    let [_, n] = trueArgv.splice(nSimUsed - 1, 2);
-    nSimulations = n;
-  }
-  if (trueArgv.length < 2 || trueArgv.some((v) => v.startsWith("-"))) {
+function parseArgs() {
+  function help() {
     console.error(
-      "Usage: node log2siqad.v2.js [-n num-simulations] [--skip-check] siqad-file.sqd log-file.json [destination-folder]"
+      "Usage: node log2siqad.v3.js [-n num-simulations | --skip-check] [-o destination_folder] log-file.json"
     );
     process.exit(1);
   }
 
-  const siqadFilePath = trueArgv[0];
-  const logFilePath = trueArgv[1];
+  let args;
+  try {
+    args = arg({
+      "-n": Number,
+      "-o": String,
+      "--skip-check": Boolean,
+    });
+  } catch (err) {
+    if (err instanceof arg.ArgError) {
+      console.log(err.message);
+      help();
+    } else throw err;
+  }
+
+  if (args["-n"] && args["--skip-check"]) {
+    console.error("Can't use -n and --skip-check at the same time.");
+    help();
+  }
+
+  if (args._.length !== 1) help();
+
+  let nSimulations = 1;
+  if (args["--skip-check"]) nSimulations = 0;
+  if (args["-n"] || args["-n"] === 0) nSimulations = args["-n"];
+
+  const logFilePath = args._[0];
+
+  const log = JSON.parse(readFileSync(logFilePath, "utf-8"));
+  if (log.version !== 3) {
+    console.error(
+      `This script only supports version 3 log file as input. You provided a log file version ${
+        version || 1
+      }.`
+    );
+  }
+
   const destinationFolder =
-    trueArgv[2] ||
-    `results/${basename(trueArgv[0], ".sqd")}/${basename(
-      trueArgv[1],
+    args["-o"] ||
+    `results/${basename(log.siqadFile.path, ".sqd")}/${basename(
+      logFilePath,
       ".json"
     )}`;
 
@@ -74,64 +91,50 @@ function parseArgs(args) {
   }
 
   return {
+    log,
     nSimulations,
-    siqadFilePath,
-    logFilePath,
     destinationFolder: trueDestinationFolder,
   };
 }
 
 async function main() {
-  const { logFilePath, nSimulations, siqadFilePath, destinationFolder } =
-    parseArgs(process.argv);
-
-  const { version, individuals, bestIndividual, truthTable } = JSON.parse(
-    readFileSync(logFilePath, "utf-8")
-  );
-  if (version !== 2) {
-    console.error(
-      `This script only supports version 2 log file as input. You provided a log file version ${
-        version || 1
-      }.`
-    );
-  }
+  const { log, nSimulations, destinationFolder } = parseArgs();
+  const { individuals, options, siqadFile } = log;
 
   mkdirSync(destinationFolder, { recursive: true });
   const logger = createLogger(destinationFolder + "/output.log");
 
-  individuals.sort((a, b) => b[1][1] - a[1][1]);
-  const maxFitness = individuals[0][1][1];
+  individuals.sort((a, b) => b[1].f - a[1].f);
+  const maxFitness = individuals[0][1].f;
   logger.log(`Log file maximum fitness: ${maxFitness}.`);
   logger.log(
     `Simulation will be ran ${nSimulations} times for each individual`
   );
 
   let uniqueIndividuals = new Map();
-  individuals.forEach(([id, [geneticCode, fitness]]) => {
-    if (fitness >= maxFitness) {
-      uniqueIndividuals.set(geneticCode, {
+  individuals.forEach(([id, { gc, f }]) => {
+    if (f >= maxFitness) {
+      uniqueIndividuals.set(gc, {
         id,
-        n: (uniqueIndividuals.get(geneticCode)?.n || 0) + 1,
+        n: (uniqueIndividuals.get(gc)?.n || 0) + 1,
       });
     }
   });
   logger.log(`Analyzing ${uniqueIndividuals.size} unique individuals.\n`);
 
-  const siqadFile = new SiQADFile();
-  siqadFile.open(siqadFilePath);
+  const file = new SiQADFile();
+  file.load(siqadFile.path, siqadFile.content);
 
   let c = 0;
   let i = 1;
   for (const [geneticCode, { id, n }] of uniqueIndividuals.entries()) {
     const ind = new Individual(
-      bestIndividual.width,
-      bestIndividual.height,
+      file.layout.area.width,
+      file.layout.area.height,
       {},
       geneticCode.split("").map((v) => +v)
     );
-    siqadFile.layout.setInner(
-      createInnerDBs(ind.getPhenotype(siqadFile.layout))
-    );
+    file.layout.setInner(createInnerDBs(ind.getPhenotype(file.layout)));
 
     let result = true;
 
@@ -145,12 +148,12 @@ async function main() {
     } else {
       logger.write("Running simulation... ");
       for (let i = 0; i < nSimulations && result; i++) {
-        const results = await run(siqadFile, () => truthTable, {
+        const results = await run(file, () => options.truthTable, {
           failFast: true,
           generateSiQADResult: false,
           retainSimulationFiles: false,
           simParams: {
-            ...(bestIndividual.simParams || {}),
+            ...(options.simulationParameters || {}),
             num_instances: "-1",
           },
         });
@@ -162,8 +165,8 @@ async function main() {
 
     if (result) {
       c++;
-      siqadFile.save(
-        Array(truthTable[0].input.length).fill(1),
+      file.save(
+        Array(options.truthTable[0].input.length).fill(1),
         `${destinationFolder}/${id}.sqd`
       );
     }
