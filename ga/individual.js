@@ -1,6 +1,6 @@
 import { random } from "../random.js";
 import { createInnerDBs } from "../sqd/layout.js";
-import { run } from "../truth/runner.js";
+import { run } from "../truth/runner.v2.js";
 
 export class Individual {
   /**
@@ -74,8 +74,6 @@ export class Individual {
     const results = await run(file, truthTable, {
       simParams: { mu: "-0.32", num_instances: "-1", ...this.simParams },
       failFast: false,
-      retainSimulationFiles: false,
-      generateSiQADResult: false,
     });
     this.results = results;
     this.fitness = results.score;

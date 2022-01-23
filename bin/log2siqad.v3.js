@@ -12,7 +12,7 @@ import { basename } from "path";
 import { Individual } from "../ga/individual.js";
 import { SiQADFile } from "../sqd/file.js";
 import { createInnerDBs } from "../sqd/layout.js";
-import { run } from "../truth/runner.js";
+import { run } from "../truth/runner.v2.js";
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   main();
@@ -36,7 +36,7 @@ function createLogger(path) {
 function parseArgs() {
   function help() {
     console.error(
-      "Usage: node log2siqad.v3.js [-n num-simulations | --skip-check] [-o destination_folder] log-file.json"
+      "Usage: node log2siqad.v3.js [-h] [-n num-simulations | --skip-check] [-o destination_folder] log-file.json"
     );
     process.exit(1);
   }
@@ -44,9 +44,13 @@ function parseArgs() {
   let args;
   try {
     args = arg({
+      "-h": Boolean,
       "-n": Number,
       "-o": String,
       "--skip-check": Boolean,
+
+      // Aliases
+      "--help": "-h",
     });
   } catch (err) {
     if (err instanceof arg.ArgError) {
@@ -54,6 +58,8 @@ function parseArgs() {
       help();
     } else throw err;
   }
+
+  if (args["-h"]) help();
 
   if (args["-n"] && args["--skip-check"]) {
     console.error("Can't use -n and --skip-check at the same time.");
@@ -154,20 +160,25 @@ async function main() {
       logger.log(`Simulation skipped.\n`);
     } else {
       logger.write("Running simulation... ");
+      const scores = [];
       for (let i = 0; i < nSimulations && result; i++) {
         const results = await run(file, () => options.truthTable, {
           failFast: true,
-          generateSiQADResult: false,
-          retainSimulationFiles: false,
           simParams: {
             ...(options.simulationParameters || {}),
             num_instances: "-1",
           },
         });
         result = results.result;
+        scores.push(results.score);
         logger.write(".");
       }
-      logger.log(result ? "OK!\n" : "inaccurate results, rejected.\n");
+      const meanAcc = scores.reduce((acc, n) => acc + n, 0) / scores.length;
+      logger.log(
+        (result ? "OK!" : "inaccurate results, rejected.") +
+          " (%d% mean acc)\n",
+        Math.round(meanAcc * 100)
+      );
     }
 
     if (result) {
