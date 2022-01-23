@@ -1,7 +1,13 @@
 #!/bin/env node
 import arg from "arg";
 import { Console } from "console";
-import { createWriteStream, existsSync, mkdirSync, readFileSync } from "fs";
+import {
+  createWriteStream,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from "fs";
 import { basename } from "path";
 import { Individual } from "../ga/individual.js";
 import { SiQADFile } from "../sqd/file.js";
@@ -99,7 +105,7 @@ function parseArgs() {
 
 async function main() {
   const { log, nSimulations, destinationFolder } = parseArgs();
-  const { individuals, options, siqadFile } = log;
+  const { individuals, options, generations, siqadFile } = log;
 
   mkdirSync(destinationFolder, { recursive: true });
   const logger = createLogger(destinationFolder + "/output.log");
@@ -125,6 +131,7 @@ async function main() {
   const file = new SiQADFile();
   file.load(siqadFile.path, siqadFile.content);
 
+  // SiQAD
   let c = 0;
   let i = 1;
   for (const [geneticCode, { id, n }] of uniqueIndividuals.entries()) {
@@ -174,5 +181,38 @@ async function main() {
 
   if (nSimulations > 0) logger.log(`Generated ${c} accurate individuals.`);
   else logger.log(`Generated ${c} individuals with fitness ${maxFitness}.`);
+
+  // Best Individuals
+  let outGenerations = [];
+  for (const { bestIndividual: bestIndividualId, population } of generations) {
+    const [_, bestIndividual] = individuals.find(
+      (ind) => ind[0] === bestIndividualId
+    );
+
+    const fitnesses = individuals
+      .filter((ind) => population.includes(ind[0]))
+      .map((ind) => ind[1].f);
+
+    outGenerations.push({
+      minFitness: Math.min(...fitnesses),
+      avgFitness: fitnesses.reduce((acc, f) => acc + f, 0) / fitnesses.length,
+      bestFitness: bestIndividual.f,
+      bestIndividual: {
+        id: bestIndividualId,
+        gc: bestIndividual.gc,
+        preview: new Individual(
+          file.layout.area.width,
+          file.layout.area.height,
+          {},
+          bestIndividual.gc.split("").map((v) => +v)
+        ).toString(),
+      },
+    });
+    writeFileSync(
+      destinationFolder + "/statistics.json",
+      JSON.stringify(outGenerations, null, 2)
+    );
+  }
+
   logger.log("Done");
 }

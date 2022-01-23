@@ -3,3 +3,4 @@ simulation-files
 simulation-results
 runs
 *.sqd.bak
+results
