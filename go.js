@@ -38,9 +38,10 @@ const GA_STATE = {
 /**
  *
  * @param {SiQADFile} file
+ * @param {string} [prefix]
  */
-export async function main(file) {
-  const RUN_ID = randomUUID();
+export async function main(file, prefix = "") {
+  const RUN_ID = (prefix ? prefix + "_" : "") + randomUUID();
   console.log("Random seed:", GA_STATE.randomSeed);
   console.log("Run id:", RUN_ID);
   console.log("Population size:", GA_STATE.options.populationSize);
@@ -94,7 +95,10 @@ export async function main(file) {
     console.log(ind.toString(true));
     try {
       collectStatisticsCurrentGeneration(ga, ind);
-      saveLog(RUN_ID, file);
+      saveLog(RUN_ID, {
+        path: file.path,
+        content: file.xmlContent,
+      });
     } catch (error) {
       console.error("Error writing run log:", error);
     }
@@ -203,13 +207,13 @@ function loadLog(filePath) {
 // ---- Execução
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  function help() {
+  function help(exit = true) {
     console.error(
-      "Usage: node go.js [-n 30] [-c run-log.json] [-t truth-table.js [-o options.json] siqad-file.sqd]"
+      "Usage: node go.js [-h] [--prefix log-file-name-prefix] [-n num-generations] [-c run-log.json] [-t truth-table.js [-o options.json] siqad-file.sqd]"
     );
-    process.exit(1);
+    if (exit) process.exit(1);
   }
-  function optionsHelp() {
+  function optionsHelp(exit = true) {
     console.error(
       `The options file, if supplied, must be a JSON containing an object with one or more of the properties in the example bellow (which shows the default values for them):
 {
@@ -239,22 +243,33 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
 }`
     );
-    process.exit(1);
+    if (exit) process.exit(1);
   }
 
   let args;
   try {
     args = arg({
+      "-h": Boolean,
       "-n": Number,
       "-c": String,
       "-t": String,
       "-o": String,
+      "--prefix": String,
+
+      // Aliases
+      "--help": "-h",
     });
   } catch (err) {
     if (err instanceof arg.ArgError) {
       console.log(err.message);
       help();
     } else throw err;
+  }
+
+  if (args["-h"]) {
+    help(false);
+    console.log();
+    optionsHelp();
   }
 
   if (args["-n"]) NUM_GENERATIONS = parseInt(args["-n"]);
@@ -266,7 +281,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   if (args["-c"]) {
     const { siqadFile } = loadLog(args["-c"]);
-    await main(siqadFile);
+    await main(siqadFile, args["--prefix"] || "");
   } else if (args["-t"] && args._.length === 1) {
     GA_STATE.options.truthTable = (await import("./" + args["-t"])).default;
     if (args["-o"]) {
@@ -317,7 +332,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     }
     const siqadFile = new SiQADFile();
     siqadFile.open(args._[0]);
-    await main(siqadFile);
+    await main(siqadFile, args["--prefix"] || "");
   } else {
     help();
   }

@@ -42,6 +42,7 @@ function generateSimulationParams(config = {}) {
 export class SiQADFile {
   constructor() {
     this.path = null;
+    this.xmlContent = null;
     this.layout = null;
     this.parsed = null;
   }
@@ -62,6 +63,7 @@ export class SiQADFile {
    */
   load(fakePath, xml) {
     this.path = fakePath;
+    this.xmlContent = xml;
     this.parsed = parseXML(xml);
     const dbs = this.parsed?.siqad?.design?.layer
       ?.find((l) => l.$type === "DB")
