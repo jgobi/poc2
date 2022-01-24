@@ -84,7 +84,9 @@ export async function main(file, prefix = "") {
 
   const max = NUM_GENERATIONS + ga.generationCount;
   for (let i = ga.generationCount; i < max; i++) {
-    console.log("\nGeneration", i + 1, "of", max);
+    console.log("\nCurrent date is:", new Date().toISOString());
+    let start = Date.now();
+    console.log("Generation", i + 1, "of", max);
     const qtd = ga.population.map((p) => p.dbCount);
     qtd.sort((a, b) => a - b);
     console.log("Min DB count:", qtd.shift(), "| Max DB count:", qtd.pop());
@@ -93,6 +95,7 @@ export async function main(file, prefix = "") {
       `Best individual: ${ind.id} (${ind.fitness}/${ind.results.maxScore})`
     );
     console.log(ind.toString(true));
+    console.log("(took %d seconds)", Math.floor((Date.now() - start) / 1000));
     try {
       collectStatisticsCurrentGeneration(ga, ind);
       saveLog(RUN_ID, {
