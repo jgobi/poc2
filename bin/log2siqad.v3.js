@@ -102,12 +102,15 @@ async function main() {
     `Simulation will be ran ${nSimulations} times for each individual`
   );
 
+  let bestIndividualsGenerations = generations.map((g) => g.bestIndividual);
+
   let uniqueIndividuals = new Map();
   individuals.forEach(([id, { gc, f }]) => {
     if (f >= maxFitness) {
+      let curEntry = uniqueIndividuals.get(gc);
       uniqueIndividuals.set(gc, {
-        id,
-        n: (uniqueIndividuals.get(gc)?.n || 0) + 1,
+        id: bestIndividualsGenerations.includes(id) ? id : curEntry?.id ?? id,
+        n: (curEntry?.n || 0) + 1,
       });
     }
   });
