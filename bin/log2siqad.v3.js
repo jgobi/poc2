@@ -1,36 +1,15 @@
 #!/bin/env node
 import arg from "arg";
-import { Console } from "console";
-import {
-  createWriteStream,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  writeFileSync,
-} from "fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { basename } from "path";
 import { Individual } from "../ga/individual.js";
+import { createLogger } from "../helpers.js";
 import { SiQADFile } from "../sqd/file.js";
 import { createInnerDBs } from "../sqd/layout.js";
 import { run } from "../truth/runner.v2.js";
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   main();
-}
-
-function createLogger(path) {
-  const file = createWriteStream(path, { encoding: "utf-8", flags: "w" });
-  const myConsole = new Console(file);
-  return {
-    log(...args) {
-      console.log(...args);
-      myConsole.log(...args);
-    },
-    write(str) {
-      process.stdout.write(str);
-      file.write(str);
-    },
-  };
 }
 
 function parseArgs() {
