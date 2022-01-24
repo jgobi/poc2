@@ -42,6 +42,7 @@ const GA_STATE = {
  */
 export async function main(file, prefix = "") {
   const RUN_ID = (prefix ? prefix + "_" : "") + randomUUID();
+  console.log("Process PID:", process.pid);
   console.log("Random seed:", GA_STATE.randomSeed);
   console.log("Run id:", RUN_ID);
   console.log("Population size:", GA_STATE.options.populationSize);
