@@ -178,8 +178,8 @@
       }
 
       function ind2Drawing(ind) {
-        const w = ind.preview.split("\n").length;
-        const h = ind.preview.split("\n")[0].split(" ").length - 1;
+        const w = ind.preview.split("\n")[0].trim().split(" ").length;
+        const h = ind.preview.split("\n").length;
         console.log(w, h);
         return {
           width: (w - 1) * 3.84,
