@@ -25,6 +25,12 @@
         fill: #5b626a;
         stroke: none;
       }
+
+      #svg {
+        max-height: 50vh;
+        background-color: #28323c;
+        margin: 0.5rem;
+      }
     </style>
   </head>
 
@@ -49,10 +55,7 @@
           <small>Fitness: <span id="fit">-</span></small>
         </div>
         <div style="text-align: center">
-          <svg
-            id="svg"
-            style="max-height: 50vh; background-color: #28323c"
-          ></svg>
+          <svg id="svg"></svg>
         </div>
         <div style="text-align: center">
           <button onclick="first()">&lt;&lt;</button>
