@@ -154,7 +154,9 @@ export class SiQADFile {
       [path.resolve(inputFile), outputFile]
     );
     const file = fs.readFileSync(outputFile, "utf8");
-    const results = parseXML(file).sim_out.elec_dist.dist || []; // Sometimes there are no results
+    let results = parseXML(file).sim_out.elec_dist.dist || []; // Sometimes there are no results
+    if (!Array.isArray(results)) results = [results]; // Sometimes there is only one result
+
     const r = results
       .filter((e) => +e.$physically_valid === 1)
       .sort((a, b) => +a.$energy - +b.$energy)
