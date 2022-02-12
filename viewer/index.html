@@ -30,6 +30,7 @@
         max-height: 50vh;
         background-color: #28323c;
         margin: 0.5rem;
+        cursor: zoom-in;
       }
     </style>
   </head>
@@ -55,7 +56,7 @@
           <small>Fitness: <span id="fit">-</span></small>
         </div>
         <div style="text-align: center">
-          <svg id="svg"></svg>
+          <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
         </div>
         <div style="text-align: center">
           <button onclick="first()">&lt;&lt;</button>
@@ -63,11 +64,26 @@
           <span id="cur">-</span>
           <button onclick="next()">&gt;</button>
           <button onclick="last()">&gt;&gt;</button>
+          <button style="margin-left: 1em" onclick="download()">
+            Download
+          </button>
+        </div>
+        <div style="text-align: center; margin: 2em">
+          <button onclick="unloadSiqad()">X</button>
+          <input
+            id="siqad"
+            type="file"
+            onchange="loadSiqad(this)"
+            accept=".sqd"
+          />
         </div>
       </div>
     </div>
 
     <script src="chart.min.js"></script>
+    <script src="parser.min.js"></script>
+    <script src="loader.js"></script>
+    <script src="viewer.js"></script>
     <script>
       var $ = document.querySelector.bind(document);
 
@@ -94,8 +110,17 @@
         },
       });
 
+      var layout = null;
       var statistics = [];
       var cursor = 0;
+
+      $("#svg").onclick = function zoomIn() {
+        if (cursor >= statistics.length) return;
+
+        const nSvg = this.cloneNode(true);
+        let svg = svg2blob(nSvg);
+        openBlob(svg);
+      };
 
       async function change(el) {
         /** @type {File} **/
@@ -105,6 +130,7 @@
           try {
             content = JSON.parse(await file.text());
           } catch (err) {
+            el.value = "";
             alert("Error parsing file, see console for more info.");
             console.error(err);
           }
@@ -146,12 +172,30 @@
       }
 
       function showIndividual() {
+        if (cursor >= statistics.length) return;
         const f = statistics[cursor].bestFitness;
         const ind = statistics[cursor].bestIndividual;
         $("#ind").innerText = ind.id;
         $("#fit").innerText = f;
         $("#cur").innerText = `${cursor + 1} / ${statistics.length}`;
-        draw($("#svg"), ind2Drawing(ind));
+        if (!layout) draw($("#svg"), ind2Drawing(ind));
+        else {
+          layout.setInner(
+            createInnerDBs(
+              ind2DB(ind).map((db) => ({
+                n: db.n + layout.area.n.min,
+                m: db.m + layout.area.m.min,
+                l: db.l,
+              }))
+            )
+          );
+          drawSparse(
+            $("#svg"),
+            db2Drawing(
+              layout.getLayoutForGivenInput(Array(layout.inputs.length).fill(1))
+            )
+          );
+        }
       }
 
       function first() {
@@ -180,23 +224,6 @@
         }
       }
 
-      function ind2Drawing(ind) {
-        const w = ind.preview.split("\n")[0].trim().split(" ").length;
-        const h = ind.preview.split("\n").length;
-        console.log(w, h);
-        return {
-          width: (w - 1) * 3.84,
-          height: (h - 1) * 7.68 + 2.25,
-          items: ind.gc.split("").flatMap((el, i) =>
-            [0, 1].map((k) => ({
-              x: (i % w) * 3.84,
-              y: Math.floor(i / w) * 7.68 + k * 2.25,
-              db: k + 1 === +el,
-            }))
-          ),
-        };
-      }
-
       function draw(svg, gc) {
         svg.innerHTML = "";
         svg.setAttribute("viewBox", `-3 -3 ${gc.width + 6} ${gc.height + 6}`);
@@ -211,6 +238,61 @@
           c.setAttribute("r", el.db ? 0.9 : 0.4);
           svg.appendChild(c);
         }
+      }
+
+      function drawSparse(svg, gc) {
+        const dotSize = (gc.width + gc.height) * 0.005;
+        svg.innerHTML = "";
+
+        svg.setAttribute(
+          "viewBox",
+          `-${dotSize * 2} -${dotSize * 2} ${gc.width + dotSize * 4} ${
+            gc.height + dotSize * 4
+          }`
+        );
+        for (let el of gc.items) {
+          const c = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "circle"
+          );
+          c.setAttribute("fill", el.color);
+          c.setAttribute("stroke", "#fefefd");
+          c.setAttribute("stroke-width", 0.278 * dotSize);
+          c.setAttribute("cx", el.x);
+          c.setAttribute("cy", el.y);
+          c.setAttribute("r", dotSize);
+          svg.appendChild(c);
+        }
+      }
+
+      async function loadSiqad(el) {
+        /** @type {File} **/
+        let file = el.files[0];
+        if (file && file.name.endsWith(".sqd")) {
+          try {
+            layout = DBLayoutWeb.fromSiQAD(await file.text());
+            showIndividual();
+          } catch (err) {
+            el.value = "";
+            alert("Error parsing file, see console for more info.");
+            console.error(err);
+          }
+        } else {
+          alert("Invalid file, please provide a valid SiQAD file.");
+        }
+      }
+
+      function unloadSiqad() {
+        layout = null;
+        $("#siqad").value = "";
+        showIndividual();
+      }
+
+      function download() {
+        if (cursor >= statistics.length) return;
+
+        const nSvg = $("#svg").cloneNode(true);
+        downloadSvg(nSvg, statistics[cursor].bestIndividual.id);
       }
     </script>
   </body>
