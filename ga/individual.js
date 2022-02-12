@@ -82,10 +82,23 @@ export class Individual {
   }
 
   mutate() {
-    const genetic = [...this.geneticCode];
-    const idx = Math.floor(random.double() * genetic.length);
-    genetic[idx] = (genetic[idx] + (random.double() < 0.5) + 1) % 3;
-    return new Individual(this.width, this.height, this.simParams, genetic);
+    if (random.double() < 0.4) {
+      // one point mutation
+      const genetic = [...this.geneticCode];
+      const idx = Math.floor(random.double() * genetic.length);
+      genetic[idx] = (genetic[idx] + (random.double() < 0.5) + 1) % 3;
+      return new Individual(this.width, this.height, this.simParams, genetic);
+    } else {
+      // uniform mutation
+      return new Individual(
+        this.width,
+        this.height,
+        this.simParams,
+        this.geneticCode.map((g) =>
+          random.double() < 0.5 ? g : (g + (random.double() < 0.5) + 1) % 3
+        )
+      );
+    }
   }
 
   /**
