@@ -108,7 +108,7 @@ export class DBLayout {
         db.n < this.area.n.min ||
         db.n > this.area.n.max
       )
-        throw new OutOfBoundsError(db, area);
+        throw new OutOfBoundsError(db, this.area);
     }
     this.id = randomUUID();
     this.inner = dbs;
