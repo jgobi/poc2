@@ -201,11 +201,12 @@ async function main() {
         ).toString(),
       },
     });
-    writeFileSync(
-      destinationFolder + "/statistics.json",
-      JSON.stringify(outGenerations, null, 2)
-    );
   }
+  writeFileSync(
+    destinationFolder + "/statistics.json",
+    JSON.stringify(outGenerations, null, 2)
+  );
 
+  writeFileSync(destinationFolder + "/base.sqd", file.xmlContent, "utf8");
   logger.log("Done");
 }
