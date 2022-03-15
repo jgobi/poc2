@@ -10,7 +10,7 @@ export function stringifyXML(xmlObject) {
   if (typeof value === "object") _stringifyXML(xml, value);
   else xml.txt(value);
 
-  return xml.end({ pretty: true, indent: "  " });
+  return xml.end({ pretty: true, indent: "    " });
 }
 
 /**
