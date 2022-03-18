@@ -213,7 +213,19 @@ function loadLog(filePath) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   function help(exit = true) {
     console.error(
-      "Usage: node go.js [-h] [--prefix log-file-name-prefix] [-n num-generations] [-c run-log.json] [-t truth-table.js [-o options.json] siqad-file.sqd]"
+      "Usage: node go.js [-h] [--prefix log-file-name-prefix] [-n num-generations] [-c run-log.json] [-t truth-table [-o options.json] siqad-file.sqd]"
+    );
+    if (exit) process.exit(1);
+  }
+  function truthTableHelp(exit = true) {
+    console.error(
+      `The truth table file, if supplied, must be a file containing one entry of the desired truth table per line, in the format:
+comma separated inputs : comma separated outputs
+Example:
+0,0 : 0,0
+0,1 : 0,1
+1,0 : 0,1
+1,1 : 1,1`
     );
     if (exit) process.exit(1);
   }
@@ -273,6 +285,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (args["-h"]) {
     help(false);
     console.log();
+    truthTableHelp(false);
+    console.log();
     optionsHelp();
   }
 
@@ -287,7 +301,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const { siqadFile } = loadLog(args["-c"]);
     await main(siqadFile, args["--prefix"] || "");
   } else if (args["-t"] && args._.length === 1) {
-    GA_STATE.options.truthTable = (await import("./" + args["-t"])).default;
+    try {
+      const truth = parseTruthTableFile(fs.readFileSync(args["-t"], "utf-8"));
+      GA_STATE.options.truthTable = () => truth;
+    } catch (err) {
+      console.error("Invalid truth table.", err);
+      truthTableHelp();
+    }
     if (args["-o"]) {
       try {
         const options = JSON.parse(fs.readFileSync(args["-o"], "utf-8"));
@@ -340,4 +360,29 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   } else {
     help();
   }
+}
+
+/**
+ *
+ * @param {string} str
+ */
+export function parseTruthTableFile(str) {
+  if (
+    !/^(?: *(?:[0,1] *, *)*[0,1] *: *(?:[0,1] *, *)*[0,1] *(?:\r\n|\n)+)+$/.test(
+      str + "\n"
+    )
+  ) {
+    throw new Error("Invalid file format.");
+  }
+  return str
+    .trim()
+    .split("\n")
+    .filter((line) => line.includes(":"))
+    .map((line) =>
+      line.split(":").map((field) => field.split(",").map((x) => +x.trim()))
+    )
+    .map(([input, output]) => ({
+      input,
+      output,
+    }));
 }
