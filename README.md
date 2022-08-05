@@ -2,4 +2,8 @@
 
 Este projeto tem como objetivo o desenvolvimento de um algoritmo evolutivo capaz de gerar circuitos lógicos funcionais que possam ser avaliados usando o SiQAD.
 
+
+## Funcionamento do projeto 
+
+1. 
 > :warning: Este arquivo ainda é um *Work in Progress*.

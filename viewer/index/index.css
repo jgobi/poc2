@@ -1,0 +1,27 @@
+* {
+    font-family: sans-serif;
+  }
+pre {
+font-family: monospace;
+text-align: center;
+background-color: #eee;
+padding: 10px;
+}
+
+.db {
+fill: #c8c8c8;
+stroke: #fefefd;
+stroke-width: 0.25;
+}
+
+.dot {
+fill: #5b626a;
+stroke: none;
+}
+
+#svg {
+max-height: 50vh;
+background-color: #28323c;
+margin: 0.5rem;
+cursor: zoom-in;
+}

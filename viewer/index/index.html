@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <link rel="stylesheet" type="text/css" href="index.css" />
+  </head>
+
+  <body>
+    <h1>Select the statistics.json file</h1>
+    <input
+      id="file"
+      type="file"
+      onchange="change(this)"
+      accept="application/json"
+    />
+    <hr />
+    <div style="display: flex; width: 100%">
+      <div style="width: 100%; padding: 10px; border-right: 1px solid black">
+        <h2>Fitness evolution</h2>
+        <canvas id="chart" width="400" height="200"></canvas>
+      </div>
+      <div style="width: 100%; padding: 10px">
+        <h2>Evolution of the best individual</h2>
+        <div id="ind" style="text-align: center">-</div>
+        <div style="text-align: center">
+          <small>Fitness: <span id="fit">-</span></small>
+        </div>
+        <div style="text-align: center">
+          <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+        <div style="text-align: center">
+          <button onclick="first()">&lt;&lt;</button>
+          <button onclick="prev()">&lt;</button>
+          <span id="cur">-</span>
+          <button onclick="next()">&gt;</button>
+          <button onclick="last()">&gt;&gt;</button>
+          <button style="margin-left: 1em" onclick="download()">
+            Download
+          </button>
+        </div>
+        <div style="text-align: center; margin: 2em">
+          <button onclick="unloadSiqad()">X</button>
+          <input
+            id="siqad"
+            type="file"
+            onchange="loadSiqad(this)"
+            accept=".sqd"
+          />
+        </div>
+      </div>
+    </div>
+
+    <script src="../chart.min.js"></script>
+    <script src="../parser.min.js"></script>
+    <script src="../loader.js"></script>
+    <script src="../viewer.js"></script>
+    <script src="index.js"></script>
+  </body>
+</html>
