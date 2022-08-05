@@ -6,6 +6,10 @@ export function colorize(path, n, color) {
   const xml = parseXML(fs.readFileSync(path, "utf8"));
   const dbs = xml.siqad.design.layer.find((l) => l.$type === "DB").dbdot;
 
+  // see dbs are alocated
+  console.log(dbs)
+
+
   for (let i = dbs.length - 1; i >= dbs.length - n && i >= 0; i--) {
     dbs[i].color = color;
   }
