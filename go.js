@@ -213,7 +213,7 @@ function loadLog(filePath) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   function help(exit = true) {
     console.error(
-      "Usage: node go.js [-h] [--prefix log-file-name-prefix] [-n num-generations] [-c run-log.json] [-t truth-table [-o options.json] siqad-file.sqd]"
+      "Usage: node go.js [-h] [--prefix log-file-name-prefix] [-n num-generations] [-c run-log.json] [-t truth-table] [-o options.json] [siqad-file.sqd]"
     );
     if (exit) process.exit(1);
   }
