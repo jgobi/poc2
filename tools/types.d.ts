@@ -73,3 +73,11 @@ export interface GeneticAlgorithmState {
   options: GeneticAlgorithmOptions;
   statistics: GeneticAlgorithmStatistics;
 }
+
+export interface DB {
+  x: number;
+  y: number;
+  state: string;
+  color: string;
+  interval: number;
+}
