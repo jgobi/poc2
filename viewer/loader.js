@@ -91,24 +91,24 @@ function parseDBs(dbs) {
     }
   }
 
-  if (area.length !== 4) {
-    throw new Error(
-      "The inner area must be delimited by 4 DBs (colored with #ff00ffff)."
-    );
-  }
-  if (inputs < 1) {
-    throw new Error(
-      "File must have at least 1 input DB (colored with #ffffffxx, where xx is the input number)."
-    );
-  }
-  if (flatOutputs < 2) {
-    throw new Error(
-      "File must have at least 1 pair of output DB (colored with #ffff00xx, where xx is the output number)."
-    );
-  }
-  if (flatOutputs % 2) {
-    throw new Error("Outputs must be a pair of DBs.");
-  }
+  // if (area.length !== 4) {
+  //   throw new Error(
+  //     "The inner area must be delimited by 4 DBs (colored with #ff00ffff)."
+  //   );
+  // }
+  // if (inputs < 1) {
+  //   throw new Error(
+  //     "File must have at least 1 input DB (colored with #ffffffxx, where xx is the input number)."
+  //   );
+  // }
+  // if (flatOutputs < 2) {
+  //   throw new Error(
+  //     "File must have at least 1 pair of output DB (colored with #ffff00xx, where xx is the output number)."
+  //   );
+  // }
+  // if (flatOutputs % 2) {
+  //   throw new Error("Outputs must be a pair of DBs.");
+  // }
 
   inputs.sort(colorSortFn);
   flatOutputs.sort(colorSortFn);
@@ -148,5 +148,22 @@ class OutOfBoundsError extends Error {
     super("DB must be inside mutable area.");
     this.db = db;
     this.area = area;
+  }
+}
+
+
+async function loadSiqad(el) {
+  /** @type {File} **/
+  let file = el.files[0];
+  if (file && file.name.endsWith(".sqd")) {
+    try {
+      layout = DBLayoutWeb.fromSiQAD(await file.text());
+    } catch (err) {
+      el.value = "";
+      alert("Error parsing file, see console for more info.");
+      console.error(err);
+    }
+  } else {
+    alert("Invalid file, please provide a valid SiQAD file.");
   }
 }

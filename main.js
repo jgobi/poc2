@@ -3,15 +3,14 @@ import fs from "fs";
 import arg from "arg";
 import { resolve } from "path";
 import { randomUUID } from "crypto";
-
 import { SiQADFile } from "./sqd/file.js";
 import { GeneticAlgorithm } from "./ga/algorithm.js";
-import { random, RANDOM_SEED, setRandomSeed } from "./random.js";
+import { random, RANDOM_SEED, setRandomSeed } from "./tools/random.js";
 import { Individual } from "./ga/individual.js";
 
 let NUM_GENERATIONS = 30;
 
-/** @type {import('./types.js').GeneticAlgorithmState} */
+/** @type {import('./tools/types.js').GeneticAlgorithmState} */
 const GA_STATE = {
   options: {
     crossoverRate: 0.9,

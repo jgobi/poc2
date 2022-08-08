@@ -12,8 +12,10 @@
   "dependencies": {
     "adm-zip": "^0.5.9",
     "arg": "^5.0.1",
+    "bootstrap": "^5.2.0",
     "fast-xml-parser": "^3.21.1",
-    "xmlbuilder": "^15.1.1"
+    "xmlbuilder": "^15.1.1",
+    "xterm": "^4.19.0"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.4.34"

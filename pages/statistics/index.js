@@ -184,6 +184,7 @@ async function loadSiqad(el) {
   if (file && file.name.endsWith(".sqd")) {
     try {
       layout = DBLayoutWeb.fromSiQAD(await file.text());
+      console.log(layout)
       showIndividual();
     } catch (err) {
       el.value = "";
