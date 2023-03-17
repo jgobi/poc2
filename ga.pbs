@@ -1,0 +1,41 @@
+#!/bin/bash
+ 
+# Dica 1: sempre confira os arquivos '.e' e '.o' gerados
+# Dica 2: sempre confira o seu email
+# Dica 3: leia a documentacao do software que voce ira utilizar
+#
+# Neste exemplo temos configurado um job:
+#   . que tera o nome 'analise1Py'
+#   . que requer '1' processador (ppn=1) e '2gb' de RAM (mem=2gb)
+#   . uma mensagem de email sera enviada quando o job abortar('a') e finalizar('e')
+#
+# Abaixo as diretivas PBS: especificam recursos que serao reservadas para o job e outras configuracoes
+
+##PBS -N GeneticAlgorithmSiQAD
+#PBS -N  SiQadLine
+#PBS -l nodes=1:ppn=36,mem=2gb
+#PBS -m ae 
+# Retire a primeira # abaixo e coloque o seu e-mail institucional
+#PBS -M stefan.leal@ufv.br
+
+# Seu roteiro comeca a partir daqui:
+
+# Altera o diretorio corrente para o diretorio de onde foi submetido o script
+# Nao remova a linha abaixo
+cd $PBS_O_WORKDIR 
+ 
+# Habilita o carregamento de modulos
+# Nao remova a linha abaixo
+source /etc/profile.d/modules.sh 
+ 
+# Carregar os softwares que serao utilizados no seu script
+# Carrega o modulo python versao 2.7.11
+module load nodejs/18.12.1
+module load glib/2.50.0
+module load boost/1.71.0
+
+
+# Coloque aqui o comando do software carregado
+# Configure de acordo com a sua analise e parametros que desejar
+node ./go.js -n 200 -o options.example.json -t truth/tables/dotY.truth tests/TwoORs-6x10.sqd
+#node ./go.js -n 200 -o options.example.json --prefix=Line -t  truth/tables/fio.truth tests/Straight.sqd

@@ -1,0 +1,30 @@
+no change     /data/apps/miniconda3/4.12.0/condabin/conda
+no change     /data/apps/miniconda3/4.12.0/bin/conda
+no change     /data/apps/miniconda3/4.12.0/bin/conda-env
+no change     /data/apps/miniconda3/4.12.0/bin/activate
+no change     /data/apps/miniconda3/4.12.0/bin/deactivate
+no change     /data/apps/miniconda3/4.12.0/etc/profile.d/conda.sh
+no change     /data/apps/miniconda3/4.12.0/etc/fish/conf.d/conda.fish
+no change     /data/apps/miniconda3/4.12.0/shell/condabin/Conda.psm1
+no change     /data/apps/miniconda3/4.12.0/shell/condabin/conda-hook.ps1
+no change     /data/apps/miniconda3/4.12.0/lib/python3.9/site-packages/xontrib/conda.xsh
+no change     /data/apps/miniconda3/4.12.0/etc/profile.d/conda.csh
+modified      /home/ef05066/.bashrc
+
+==> For changes to take effect, close and re-open your current shell. <==
+
+no change     /data/apps/miniconda3/4.12.0/condabin/conda
+no change     /data/apps/miniconda3/4.12.0/bin/conda
+no change     /data/apps/miniconda3/4.12.0/bin/conda-env
+no change     /data/apps/miniconda3/4.12.0/bin/activate
+no change     /data/apps/miniconda3/4.12.0/bin/deactivate
+no change     /data/apps/miniconda3/4.12.0/etc/profile.d/conda.sh
+no change     /data/apps/miniconda3/4.12.0/etc/fish/conf.d/conda.fish
+no change     /data/apps/miniconda3/4.12.0/shell/condabin/Conda.psm1
+no change     /data/apps/miniconda3/4.12.0/shell/condabin/conda-hook.ps1
+no change     /data/apps/miniconda3/4.12.0/lib/python3.9/site-packages/xontrib/conda.xsh
+no change     /data/apps/miniconda3/4.12.0/etc/profile.d/conda.csh
+modified      /home/ef05066/.bashrc
+
+==> For changes to take effect, close and re-open your current shell. <==
+

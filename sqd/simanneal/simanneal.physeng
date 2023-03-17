@@ -9,7 +9,6 @@ Available path/command replacements:
 @PROBLEMPATH@   : Path to the problem file describing the simulation problem and parameters.
 @RESULTPATH@    : Path to the result file that will be read by SiQAD after the simulation is complete.
 @JOBTMP@        : Temporary path for this simulation job to store generated files.
-
 These replacements are done on the following fields:
 interpreter, bin_path, command
 -->

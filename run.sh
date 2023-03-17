@@ -1,0 +1,2 @@
+#LD_LIBRARY_PATH=lib  node  ./go.js --prefix Dot -n 50 -t /home/teitei/Documents/IC_UFV/SiDb/cluster/poc2/tests/Dot/dot.truth -o options.example.json /home/teitei/Documents/IC_UFV/SiDb/cluster/poc2/tests/Dot/TwoDots-6x10.sqd
+LD_LIBRARY_PATH=lib  node  ./go.js --prefix  Cruzador -n 50 -t /home/teitei/Documents/IC_UFV/SiDb/cluster/poc2/truth/tables/cruzador.truth -o options.example.json /home/teitei/Documents/IC_UFV/SiDb/cluster/poc2/tests/cross.sqd

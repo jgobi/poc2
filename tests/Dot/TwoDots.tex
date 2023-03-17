@@ -1,0 +1,196 @@
+\documentclass [15pt,a4paper,twoside]{article}
+\usepackage[portuges,shorthands=off]{babel}        % shorhands=off is required for babel french in combination with tikz karnaugh....
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{geometry}
+\geometry{verbose,a4paper, tmargin=3.5cm,bmargin=3.5cm,lmargin=2.5cm,rmargin=2.5cm,headsep=1cm,footskip=1.5cm}
+\usepackage{fancyhdr}
+\usepackage{colortbl}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{tikz -timing}
+\usepackage{tikz}
+\usetikzlibrary{karnaugh}
+\pagestyle{fancy}
+
+\definecolor{LogisimKMapColor0}{RGB}{128,0,0}
+\definecolor{LogisimKMapColor1}{RGB}{230,25,75}
+\definecolor{LogisimKMapColor2}{RGB}{250,190,190}
+\definecolor{LogisimKMapColor3}{RGB}{170,110,40}
+\definecolor{LogisimKMapColor4}{RGB}{245,130,48}
+\definecolor{LogisimKMapColor5}{RGB}{255,215,180}
+\definecolor{LogisimKMapColor6}{RGB}{128,128,0}
+\definecolor{LogisimKMapColor7}{RGB}{255,255,25}
+\definecolor{LogisimKMapColor8}{RGB}{210,245,60}
+\definecolor{LogisimKMapColor9}{RGB}{0,0,128}
+\definecolor{LogisimKMapColor10}{RGB}{145,30,180}
+\definecolor{LogisimKMapColor11}{RGB}{60,180,175}
+\definecolor{LogisimKMapColor12}{RGB}{0,130,203}
+\definecolor{LogisimKMapColor13}{RGB}{230,190,255}
+\definecolor{LogisimKMapColor14}{RGB}{170,255,195}
+\definecolor{LogisimKMapColor15}{RGB}{240,50,230}
+
+\fancyhead{}
+\fancyhead[C] {Logisim-evolução gerada pelo documento em Wed Jan 04 15:56:49 BRT 2023}
+\fancyfoot[C] {\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\makeatother
+
+\begin{document}
+\section{Introdução}
+Este documento foi gerado por logisim-evolution. Qualquer parte das fontes do TeX pode ser usada em seus próprios documentos sem nenhum problema. Caso você queira usar todas/partes das fontes TeX geradas, por favor (1) não se esqueça de incluir os pacotes necessários, e (2) inclua uma observação de que esta fonte foi gerada pela logisim-evolução.
+%===============================================================================
+\section{Tabela da verdade}
+A tabela pode ser muito grande para ser exibida na página. No tempo de geração não foi feito nenhum cálculo sobre o tamanho da tabela em relação à largura/altura da página.
+%-------------------------------------------------------------------------------
+\subsection{Tabela da verdade compactada}
+\begin{center}
+\begin{tabular}{ccccc|c}
+$X$&$Y$&$Z$&$a$&$b$&$x$\\
+\hline
+$-$&$-$&$-$&$0$&$0$&$0$\\
+$-$&$-$&$-$&$0$&$1$&$1$\\
+$0$&$-$&$0$&$1$&$0$&$1$\\
+$-$&$-$&$-$&$1$&$1$&$0$\\
+$0$&$-$&$1$&$1$&$0$&$0$\\
+$1$&$0$&$0$&$1$&$0$&$0$\\
+$1$&$-$&$1$&$1$&$0$&$1$\\
+$1$&$1$&$0$&$1$&$0$&$1$\\
+
+\end{tabular}
+\end{center}
+%-------------------------------------------------------------------------------
+\subsection{Tabela da verdade completa}
+\begin{center}
+\begin{tabular}{ccccc|c}
+$X$&$Y$&$Z$&$a$&$b$&$x$\\
+\hline
+$0$&$0$&$0$&$0$&$0$&$0$\\
+$0$&$0$&$0$&$0$&$1$&$1$\\
+$0$&$0$&$0$&$1$&$0$&$1$\\
+$0$&$0$&$0$&$1$&$1$&$0$\\
+$0$&$0$&$1$&$0$&$0$&$0$\\
+$0$&$0$&$1$&$0$&$1$&$1$\\
+$0$&$0$&$1$&$1$&$0$&$0$\\
+$0$&$0$&$1$&$1$&$1$&$0$\\
+$0$&$1$&$0$&$0$&$0$&$0$\\
+$0$&$1$&$0$&$0$&$1$&$1$\\
+$0$&$1$&$0$&$1$&$0$&$1$\\
+$0$&$1$&$0$&$1$&$1$&$0$\\
+$0$&$1$&$1$&$0$&$0$&$0$\\
+$0$&$1$&$1$&$0$&$1$&$1$\\
+$0$&$1$&$1$&$1$&$0$&$0$\\
+$0$&$1$&$1$&$1$&$1$&$0$\\
+$1$&$0$&$0$&$0$&$0$&$0$\\
+$1$&$0$&$0$&$0$&$1$&$1$\\
+$1$&$0$&$0$&$1$&$0$&$0$\\
+$1$&$0$&$0$&$1$&$1$&$0$\\
+$1$&$0$&$1$&$0$&$0$&$0$\\
+$1$&$0$&$1$&$0$&$1$&$1$\\
+$1$&$0$&$1$&$1$&$0$&$1$\\
+$1$&$0$&$1$&$1$&$1$&$0$\\
+$1$&$1$&$0$&$0$&$0$&$0$\\
+$1$&$1$&$0$&$0$&$1$&$1$\\
+$1$&$1$&$0$&$1$&$0$&$1$\\
+$1$&$1$&$0$&$1$&$1$&$0$\\
+$1$&$1$&$1$&$0$&$0$&$0$\\
+$1$&$1$&$1$&$0$&$1$&$1$\\
+$1$&$1$&$1$&$1$&$0$&$1$\\
+$1$&$1$&$1$&$1$&$1$&$0$\\
+
+\end{tabular}
+\end{center}
+%===============================================================================
+\section{Diagramas de Karnaugh}
+Esta secção mostra várias versões dos diagramas de Karnaugh das funções dadas.
+%-------------------------------------------------------------------------------
+\subsection{Diagramas de Karnaugh vazios}
+\begin{center}
+\begin{tikzpicture}[karnaugh,disable bars,x=1\kmunitlength,y=1\kmunitlength,kmbar left sep=1\kmunitlength,grp/.style n args={4}{#1,fill=#1!30,minimum width= #2\kmunitlength,minimum height=#3\kmunitlength,rounded corners=0.2\kmunitlength,fill opacity=0.6,rectangle,draw}]
+\karnaughmap{5}{$x$}{{$Z$}{$X$}{$a$}{$Y$}{$b$}}{}{
+\draw[kmbox] (-0.5,4.5)
+   node[below left]{$X$, $Y$}
+   node[above right]{$Z$, $a$, $b$} +(-0.2,0.2)
+   node[above left]{$x$};\draw (0,4) -- (-0.7,4.7);
+\foreach \x/\1 in %
+{0/000,1/001,2/011,3/010,4/110,5/111,6/101,7/100} {
+   \node at (\x+0.5,4.2) {\1};
+}
+\foreach \y/\1 in %
+{0/00,1/01,2/11,3/10} {
+   \node at (-0.4,-0.5-\y+4) {\1};
+}
+}
+\end{tikzpicture}
+\end{center}
+%-------------------------------------------------------------------------------
+\subsection{Preenchido com diagramas de Karnaugh}
+\begin{center}
+\begin{tikzpicture}[karnaugh,disable bars,x=1\kmunitlength,y=1\kmunitlength,kmbar left sep=1\kmunitlength,grp/.style n args={4}{#1,fill=#1!30,minimum width= #2\kmunitlength,minimum height=#3\kmunitlength,rounded corners=0.2\kmunitlength,fill opacity=0.6,rectangle,draw}]
+\karnaughmap{5}{$x$}{{$Z$}{$X$}{$a$}{$Y$}{$b$}}
+{01011010010100100101000001011010}{
+\draw[kmbox] (-0.5,4.5)
+   node[below left]{$X$, $Y$}
+   node[above right]{$Z$, $a$, $b$} +(-0.2,0.2)
+   node[above left]{$x$};\draw (0,4) -- (-0.7,4.7);
+\foreach \x/\1 in %
+{0/000,1/001,2/011,3/010,4/110,5/111,6/101,7/100} {
+   \node at (\x+0.5,4.2) {\1};
+}
+\foreach \y/\1 in %
+{0/00,1/01,2/11,3/10} {
+   \node at (-0.4,-0.5-\y+4) {\1};
+}
+}
+\end{tikzpicture}
+\end{center}
+%-------------------------------------------------------------------------------
+\subsection{Preenchido com diagramas de Karnaugh com tampas}
+\begin{center}
+\begin{tikzpicture}[karnaugh,disable bars,x=1\kmunitlength,y=1\kmunitlength,kmbar left sep=1\kmunitlength,grp/.style n args={4}{#1,fill=#1!30,minimum width= #2\kmunitlength,minimum height=#3\kmunitlength,rounded corners=0.2\kmunitlength,fill opacity=0.6,rectangle,draw}]
+\karnaughmap{5}{$x$}{{$Z$}{$X$}{$a$}{$Y$}{$b$}}
+{01011010010100100101000001011010}{
+\draw[kmbox] (-0.5,4.5)
+   node[below left]{$X$, $Y$}
+   node[above right]{$Z$, $a$, $b$} +(-0.2,0.2)
+   node[above left]{$x$};\draw (0,4) -- (-0.7,4.7);
+\foreach \x/\1 in %
+{0/000,1/001,2/011,3/010,4/110,5/111,6/101,7/100} {
+   \node at (\x+0.5,4.2) {\1};
+}
+\foreach \y/\1 in %
+{0/00,1/01,2/11,3/10} {
+   \node at (-0.4,-0.5-\y+4) {\1};
+}
+   \node[grp={LogisimKMapColor1}{0.8}{3.8}](n0) at(1.5,2) {};
+   \node[grp={LogisimKMapColor1}{0.8}{3.8}](n1) at(6.5,2) {};
+   \node[grp={LogisimKMapColor2}{0.8}{1.8}](n2) at(3.5,3) {};
+   \node[grp={LogisimKMapColor3}{0.8}{1.8}](n3) at(4.5,1) {};
+   \node[grp={LogisimKMapColor4}{0.8}{1.8}](n4) at(3.5,2) {};
+}
+\end{tikzpicture}
+\end{center}
+%===============================================================================
+\section{Expressões mínimas}
+$x =  \overline{a}  \cdot b+ \overline{X}  \cdot  \overline{Z}  \cdot a \cdot  \overline{b} +X \cdot Z \cdot a \cdot  \overline{b} +Y \cdot  \overline{Z}  \cdot a \cdot  \overline{b} $~\\
+
+
+
+
+
+
+\begin{table}
+\centering
+\begin{tabular}{l|l|l} 
+ Function & Number of DBs & Color (hexadecimal RGB)    \\ \hline
+ Inputs &  1  per occurrence&  Yellow ($\#ffffxx$)   \\
+ Outputs & 2 per occurrence &    Red ($\#ff00xx$)\\
+ Kernel delimiters &  4&  Cyan ($\#00ffff$) \\
+ Others DBs (wire)&  - &     Gray ($\#c8c8c8$)\\
+ DBs resulting from evolution & - &  Cyan ($\#01ffff$)\\
+\end{tabular}
+\end{table}
+
+\end{document}
